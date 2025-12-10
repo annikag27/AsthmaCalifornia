@@ -128,7 +128,7 @@ saveRDS(edvisits_clean, "edvisits_clean.rds")
 
 
 
-## Dataset 3 
+## Pollution 
 ### Source
 https://aqs.epa.gov/aqsweb/airdata/download_files.html#Raw
 ### Raw Overview
@@ -185,14 +185,54 @@ aqi_ca |> summarise(across(everything(), ~sum(is.na(.))))
 ```
 
 
-## Dataset 4
-### Source
-### Raw Overview
-### Missing Value Analysis 
-### Cleaning Steps
-### Preview of Final DataFrame
+## Asthma Hospital Visits
+This dataset provides the number and rate (per 10,000 residents) of asthma-related hospitalizations for California as a whole and for each county. Hospitalizations are broken out by age group and race/ethnicity, and come from the statewide Patient Discharge Data, which includes all licensed hospitals in California. Only primary asthma diagnoses are counted. 
 
-## Dataset 5
+### Source
+https://data.chhs.ca.gov/dataset/asthma-hospitalization-rates-by-county
+### Raw Overview
+```{r}
+
+hospital <- read_csv("asthma-hospitalization-rates-by-county-2015_2023.csv") |>
+  clean_names()
+
+# inspect
+glimpse(hospital)
+
+```
+
+### Missing Value Analysis 
+
+### Cleaning Steps
+```{r}
+hosp_clean <- hospital |>
+  filter(
+    strata == "Total population",
+    age_group == "All ages",
+    county != "California"   # remove the statewide row
+  )
+
+hosp_clean <- hosp_clean |>
+  filter(!is.na(age_adjusted_hospitalization_rate))
+
+hosp_clean <- hosp_clean |>
+  rename(
+    hosp_rate = age_adjusted_hospitalization_rate,
+    hosp_count = number_of_hospitalizations
+  ) |>
+  select(county, year, hosp_count, hosp_rate)
+
+```
+
+### Preview of Final DataFrame
+```{r}
+glimpse(hosp_clean)
+saveRDS(hosp_clean, "hosp_clean.rds")
+```
+
+
+## Asthma Deaths By County
+
 ### Source
 ### Raw Overview
 ### Missing Value Analysis 

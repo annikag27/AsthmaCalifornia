@@ -24,6 +24,7 @@ book:
     - prevalence.qmd
     - emergencyvisits.qmd
     - pollution.qmd
+    - asthmaxpollution.qmd
     - results.qmd
     - conclusion.qmd
 

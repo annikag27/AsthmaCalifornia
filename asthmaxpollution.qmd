@@ -1,5 +1,155 @@
----
-title: "asthmaxpollution"
-format: html
----
+# Asthma and Pollution 
+```{r}
+library(ggplot2)
+library(dplyr)
+library(tigris)
+library(sf)
+library(forcats)
+library(tidyverse)
+library(gganimate)
+library(viridis)
+
+edvisits_clean <- readRDS("edvisits_clean.rds")
+aqi_ca <- readRDS("aqi_ca.rds")
+hosp_clean <- readRDS("hosp_clean.rds")
+```
+
+## Emergency Visits & PM2.5
+```{r}
+edvisits_clean <- edvisits_clean |> 
+  mutate(
+    county = tolower(county),
+    year = as.numeric(year)
+  )
+
+aqi_ca <- aqi_ca |> 
+  mutate(
+    county = tolower(county),
+    year = as.numeric(year)
+  )
+
+pm25_year_county <- aqi_ca |>
+  group_by(county, year) |>
+  summarise(
+    pm25_days = mean(days_pm2_5, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+asthma_pm25 <- edvisits_clean |>
+  left_join(pm25_year_county, by = c("county", "year"))
+
+glimpse(asthma_pm25)
+
+```
+## Scatterplot
+```{r}
+library(ggplot2)
+
+ggplot(asthma_pm25, aes(pm25_days, ed_visit_rate)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm", color = "red", se = TRUE) +
+  labs(
+    title = "Relationship Between PM2.5 & Asthma ED Visit Rates",
+    x = "PM2.5 Days (Annual Mean)",
+    y = "Asthma ED Visit Rate (per 10,000)"
+  ) +
+  theme_minimal()
+
+```
+
+```{r}
+cor.test(asthma_pm25$pm25_days, asthma_pm25$ed_visit_rate)
+
+
+```
+A Pearson correlation test was used to assess the linear association between annual PM2.5 pollution days and asthma emergency department visit rates across California counties. The correlation was weak and not statistically significant (r = –0.087, p = 0.094, 95% CI: –0.187 to 0.015), indicating that annual PM2.5 exposure alone does not strongly predict asthma emergency visit rates at the county-year level. This is consistent with the multifactorial nature of asthma exacerbations and the limitations of using aggregated annual PM2.5 days, which may obscure short-term pollution spikes—particularly wildfire smoke episodes—that more directly impact respiratory health.
+
+## Time-Series
+```{r}
+# Fix county names: title case
+asthma_pm25 <- asthma_pm25 |> 
+  mutate(county = stringr::str_to_title(county))
+
+# Fix known truncation issues if needed
+asthma_pm25$county <- recode(
+  asthma_pm25$county,
+  "An Bernardin" = "San Bernardino",
+  "An Bernardino" = "San Bernardino",
+  "Anta Barbar" = "Santa Barbara",
+  "An Luis Obisp" = "San Luis Obispo"
+)
+
+
+ggplot(asthma_pm25, aes(year, ed_visit_rate, group = county)) +
+  geom_line(color = "#2c7fb8", linewidth = 0.6) +
+  geom_point(size = 0.9, color = "black") +
+  facet_wrap(~ county, scales = "free_y") +
+  labs(
+    title = "Asthma ED Visit Rates Over Time by County",
+    x = "Year",
+    y = "ED Visit Rate (per 10,000)"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    strip.text = element_text(size = 9, face = "bold"),
+    axis.text.x = element_text(size = 7),
+    axis.text.y = element_text(size = 7),
+    panel.grid.minor = element_blank()
+  )
+
+```
+
+## Faceted County Panels 
+```{r}
+ggplot(edvisits_clean, aes(year, ed_visit_rate)) +
+  geom_line(color = "steelblue") +
+  facet_wrap(~ county, scales = "free_y") +
+  labs(
+    title = "Asthma ED Visit Rates Over Time by County",
+    y = "ED Visit Rate",
+    x = "Year"
+  ) +
+  theme_minimal(base_size = 10)
+
+```
+
+## Dual-Line Plot for Individual 
+```{r}
+glimpse(asthma_pm25)
+
+```
+##Hospitlization Rate and PM2.5
+```{r}
+asthma_full <- asthma_pm25 |>
+  left_join(hosp_clean, by = c("county", "year"))
+
+ggplot(asthma_full, aes(pm25_days, hosp_rate)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm", color = "purple") +
+  labs(
+    title = "Relationship Between PM2.5 Days & Asthma Hospitalization Rates",
+    x = "PM2.5 Days",
+    y = "Hospitalization Rate (per 10,000)"
+  ) +
+  theme_minimal()
+
+```
+## Faceted Time Trends 
+```{r}
+ggplot(asthma_full, aes(year, hosp_rate)) +
+  geom_line() +
+  facet_wrap(~ county, scales = "free_y") +
+  theme_minimal() +
+  labs(
+    title = "Asthma Hospitalization Rates Over Time by County",
+    x = "Year",
+    y = "Hospitalization Rate (per 10,000)"
+  )
+
+```
+## Correlation 
+```{r}
+cor.test(asthma_full$pm25_days, asthma_full$hosp_rate)
+
+```
 
