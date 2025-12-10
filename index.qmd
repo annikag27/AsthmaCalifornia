@@ -1,1 +1,27 @@
 # Introduction
+
+
+## Background
+
+Asthma is a chronic respiratory disease that can be triggered or worsened by air pollution, especially fine particulate matter (PM2.5) and ground-level ozone. California has some of the worst air quality in the United States, with frequent wildfire smoke and traffic-related pollution, yet asthma burden varies widely across counties.
+
+In this project, I combine:
+
+- **Asthma Emergency Department Visit Rates by County** from the California Department of Public Health (California Breathing), which provides age-adjusted asthma ED visit rates per 10,000 residents by county and year, stratified by age and race/ethnicity.  
+- **Air Quality Statistics by County** from the U.S. Environmental Protection Agency (EPA), which provide county-level summaries of PM2.5 and ozone levels for 2023 based on monitoring data.
+
+## Research Questions
+
+1. Do California counties with higher **PM2.5** levels tend to have higher asthma ED visit rates?
+2. Is this relationship similar for **ozone**?
+3. How much variation is there across counties, and are there clear outliers with high asthma burden relative to their measured pollution?
+
+## Plan
+
+1. **Data**: Import and clean the asthma ED visit and air quality datasets; restrict to California counties and a single, recent year of asthma data.
+2. **Exploration**: Summarize and visualize asthma ED rates and air pollution (maps and scatterplots).
+3. **Models**: Fit simple linear models of asthma ED rate vs PM2.5 and ozone as a descriptive tool.
+4. **Conclusion**: Summarize findings and discuss limitations (e.g., ecological design, unmeasured confounding, mismatched years, and measurement error).
+
+
+

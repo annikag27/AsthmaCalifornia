@@ -1,0 +1,111 @@
+# Asthma Emergency Department Visits  
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(tigris)
+library(sf)
+library(forcats)
+library(tidyverse)
+
+edvisits_clean <- readRDS("edvisits_clean.rds")
+```
+
+## Plot 1 (Statewide Median ED Visit Rate):
+```{r}
+edvisits_clean |>
+  group_by(year) |>
+  summarise(median_rate = median(ed_visit_rate, na.rm = TRUE)) |>
+  ggplot(aes(x = year, y = median_rate)) +
+  geom_line(color = "steelblue", size = 1) +
+  geom_point(color = "darkblue") +
+  labs(
+    title = "Median Asthma ED Visit Rate by Year (per 10,000 residents)",
+    x = "Year",
+    y = "Median Visit Rate"
+  ) +
+  theme_minimal()
+
+```
+## Plot 2 (Top 10 Counties by Average ED Visit Rate (2015 - 2023))
+```{r}
+edvisits_clean |>
+  group_by(county) |>
+  summarise(avg_rate = mean(ed_visit_rate, na.rm = TRUE)) |>
+  slice_max(order_by = avg_rate, n = 10) |>
+  ggplot(aes(x = reorder(county, avg_rate), y = avg_rate)) +
+  geom_col(fill = "darkgreen") +
+  coord_flip() +
+  labs(
+    title = "Top 10 Counties by Average Asthma ED Visit Rate",
+    x = "County",
+    y = "Avg ED Visit Rate (per 10,000)"
+  ) +
+  theme_minimal()
+
+```
+## Heatmap of ED Visit Rate by County and Year
+```{r}
+edvisits_clean |>
+  ggplot(aes(x = factor(year), y = fct_reorder(county, ed_visit_rate), fill = ed_visit_rate)) +
+  geom_tile(color = "white") +
+  scale_fill_viridis_c(option = "magma") +
+  labs(
+    title = "Asthma ED Visit Rate by County and Year",
+    x = "Year",
+    y = "County",
+    fill = "Visit Rate"
+  ) +
+  theme_minimal()
+
+```
+## Distribution of ED Visit Rates
+```{r}
+edvisits_clean %>%
+  ggplot(aes(x = ed_visit_rate)) +
+  geom_histogram(fill = "tomato", bins = 30, color = "white") +
+  labs(
+    title = "Distribution of Asthma ED Visit Rates (All Counties, All Years)",
+    x = "ED Visit Rate (per 10,000)",
+    y = "Frequency"
+  ) +
+  theme_minimal()
+
+```
+## County Level Trends
+```{r}
+edvisits_clean |>
+  filter(county %in% c("Alameda", "Los Angeles", "San Francisco", "Fresno")) |>
+  ggplot(aes(x = year, y = ed_visit_rate)) +
+  geom_line(color = "purple") +
+  geom_point() +
+  facet_wrap(~ county) +
+  labs(
+    title = "Asthma ED Visit Rate Over Time (Selected Counties)",
+    x = "Year",
+    y = "Visit Rate"
+  ) +
+  theme_minimal()
+
+```
+## Chloropleth 
+```{r}
+
+# Get California county boundaries
+ca_counties <- counties(state = "CA", cb = TRUE, class = "sf")
+
+# Join directly using the existing columns
+ca_counties_merged <- dplyr::left_join(ca_counties, edvisits_clean, by = c("NAME" = "county"))
+
+
+ggplot(ca_counties_merged) +
+  geom_sf(aes(fill = ed_visit_rate), color = "white", size = 0.2) +
+  scale_fill_viridis_c(option = "plasma", na.value = "gray90") +
+  labs(
+    title = "Asthma ED Visit Rates by California County (2020)",
+    subtitle = "Rates per 10,000 residents",
+    fill = "ED Visit Rate"
+  ) +
+  theme_minimal()
+```
+

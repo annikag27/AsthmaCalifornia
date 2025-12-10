@@ -4,8 +4,9 @@ project:
 
 execute:
   echo: true
-  warning: false
-  message: false
+  warning: true
+  message: true
+  global: true
 
 book:
   title: "Asthma Related Mortality in California"
@@ -20,6 +21,9 @@ book:
   chapters:
     - index.qmd
     - data.qmd
+    - prevalence.qmd
+    - emergencyvisits.qmd
+    - pollution.qmd
     - results.qmd
     - conclusion.qmd
 

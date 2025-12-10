@@ -1,0 +1,260 @@
+---
+title: "pollution"
+format: html
+---
+
+# California Air Quality 2023 
+```{r}
+library(ggplot2)
+library(dplyr)
+library(tigris)
+library(sf)
+library(forcats)
+library(tidyverse)
+library(gganimate)
+library(viridis)
+
+
+aqi_ca <- readRDS("aqi_ca.rds")
+```
+
+## PM2.5 trend over time for California (2000–2023)
+```{r}
+aqi_ca |>
+  group_by(year) |>
+  summarise(mean_pm25_days = mean(days_pm2_5, na.rm = TRUE)) |>
+  ggplot(aes(year, mean_pm25_days)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Average PM2.5 Days per County in California (2000–2023)",
+    y = "Days with Elevated PM2.5",
+    x = "Year"
+  )
+
+```
+## Ozone Trend Over Time
+```{r}
+aqi_ca |>
+  group_by(year) |>
+  summarise(mean_ozone = mean(days_ozone, na.rm = TRUE)) |>
+  ggplot(aes(year, mean_ozone)) +
+  geom_line(color = "steelblue") +
+  labs(
+    title = "Ozone Days Over Time",
+    y = "Days with Elevated Ozone"
+  )
+
+```
+
+## County-level variations
+```{r}
+aqi_ca |>
+  ggplot(aes(x = factor(year), y = days_pm2_5, group = factor(year))) +
+  geom_boxplot() +
+  labs(title = "Distribution of PM2.5 Days Across Counties")
+
+aqi_ca |>
+  ggplot(aes(year, county, fill = days_pm2_5)) +
+  geom_tile() +
+  scale_fill_viridis_c() +
+  labs(title = "PM2.5 Days by County and Year")
+
+```
+
+## Wildfire Spikes
+
+```{r}
+
+# 1. Summarise PM2.5 across counties by year
+pm25_by_year <- aqi_ca |>
+  group_by(year) |>
+  summarise(
+    median_pm25 = median(days_pm2_5, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# 2. Choose wildfire-heavy years you want to highlight
+fire_years <- c(2011, 2013, 2015, 2017, 2018, 2020, 2021)
+
+fire_labels <- pm25_by_year |>
+  filter(year %in% fire_years) |>
+  mutate(label = as.character(year))
+
+# 3. Plot with wildfire annotations
+ggplot(pm25_by_year, aes(x = year, y = median_pm25)) +
+  geom_line(linewidth = 1, color = "firebrick") +
+  geom_point(size = 2, color = "firebrick") +
+  # vertical lines for wildfire years
+  geom_vline(
+    data = fire_labels,
+    aes(xintercept = year),
+    color = "red",
+    linetype = "dashed",
+    alpha = 0.5
+  ) +
+  # text labels just above the curve
+  geom_text(
+    data = fire_labels,
+    aes(x = year, y = median_pm25 + 8, label = label),
+    angle = 90,
+    vjust = -0.2,
+    size = 3
+  ) +
+  labs(
+    title = "Median Number of PM2.5 Days per Year in California (2000–2023)",
+    subtitle = "Dashed red lines mark major wildfire seasons",
+    x = "Year",
+    y = "Median days with PM2.5 as primary pollutant"
+  ) +
+  expand_limits(y = max(pm25_by_year$median_pm25, na.rm = TRUE) + 15) +
+  theme_minimal(base_size = 13)
+
+```
+## Chloropleth
+```{r}
+ca_counties <- counties(state = "CA", cb = TRUE, class = "sf") |>
+  select(NAME, geometry) |>
+  rename(county = NAME) |>
+  mutate(county = as.character(county))
+
+aqi_year <- aqi_ca |>
+  filter(year == 2020) |>   
+  select(county, days_pm2_5)
+
+aqi_year <- aqi_year |>
+  mutate(county = stringr::str_to_title(county))
+
+aqi_map <- ca_counties |>
+  left_join(aqi_year, by = "county")
+
+ggplot(aqi_map) +
+  geom_sf(aes(fill = days_pm2_5), color = "white", linewidth = 0.2) +
+  scale_fill_viridis_c(
+    option = "magma",
+    name = "Days PM2.5\n(primary pollutant)"
+  ) +
+  labs(
+    title = "PM2.5 Pollution Across California Counties",
+    subtitle = "Number of days where PM2.5 was the primary pollutant (2020)",
+    caption = "Data source: EPA Air Quality System (AQI by County)"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    legend.position = "right",
+    panel.grid = element_blank()
+  )
+
+```
+# Animated Chloropleth
+```{r eval=FALSE}
+
+# 1. Clean AQI data ---------------------------------------
+aqi_ca <- aqi_ca |>
+  mutate(
+    county = tolower(county),
+    days_pm2_5 = replace_na(days_pm2_5, 0)
+  )
+
+years <- sort(unique(aqi_ca$year))
+
+# 2. Static California geometry (same for every frame) ----
+ca_geom <- counties(state = "CA", cb = TRUE, year = 2023, class = "sf") |>
+  st_make_valid() |>
+  mutate(county = tolower(NAME)) |>
+  select(county, geometry)
+
+# 3. Complete county × year grid, then join data + geometry
+grid <- expand_grid(
+  county = ca_geom$county,
+  year   = years
+)
+
+aqi_map <- grid |>
+  left_join(aqi_ca, by = c("county", "year")) |>
+  left_join(ca_geom, by = "county") |>
+  st_as_sf()
+
+# Wildfire years flag
+wildfire_years <- c(2008, 2017, 2018, 2020, 2021)
+
+aqi_map <- aqi_map |>
+  mutate(is_fire_year = year %in% wildfire_years)
+
+# For a fixed panel extent so counties never "jump"
+bbox_ca <- st_bbox(ca_geom)
+
+# 4. Animated map -----------------------------------------
+p <- ggplot(aqi_map) +
+  geom_sf(aes(fill = days_pm2_5), color = "white", size = 0.15) +
+
+  # Static outer CA border
+  geom_sf(
+    data = st_union(ca_geom),
+    fill = NA,
+    color = "black",
+    size = 0.4,
+    inherit.aes = FALSE
+  ) +
+
+  # Red border in wildfire years
+  geom_sf(
+    data = aqi_map |> filter(is_fire_year),
+    color = "red",
+    fill = NA,
+    size = 0.8
+  ) +
+
+  scale_fill_viridis(
+    option = "magma",
+    direction = -1,
+    na.value = "grey80",        # NA as grey
+    name = "PM2.5 Days"
+  ) +
+
+  labs(
+    title = "PM2.5 Pollution Across California Counties ({closest_state})",
+    subtitle = "{ifelse(closest_state %in% wildfire_years,
+                        '🔥 Wildfire Year — Severe Smoke Season',
+                        'Non-Wildfire Year')}",
+    caption = "Source: EPA AQI Data 2000–2023"
+  ) +
+
+  theme_minimal(base_size = 13) +
+  theme(
+    panel.grid = element_blank(),
+    legend.position = "right"
+  ) +
+
+  # LOCK the spatial extent so frames are identical
+  coord_sf(
+    xlim = c(bbox_ca["xmin"], bbox_ca["xmax"]),
+    ylim = c(bbox_ca["ymin"], bbox_ca["ymax"]),
+    expand = FALSE
+  ) +
+
+  transition_states(
+    year,
+    transition_length = 2,
+    state_length = 1
+  ) +
+  ease_aes("linear")
+
+# 5. Render animation (GIF) -------------------------------
+anim <- animate(
+  p,
+  nframes = 150,
+  fps = 5,
+  width = 900,
+  height = 700,
+  renderer = gifski_renderer()
+)
+
+anim_save("pm25_animation.gif", anim)
+```
+## PM2.5 Pollution Over Time
+
+Below is an animated choropleth showing pollution changes across California counties:
+
+![](pm25_animation.gif){width=75%}
+

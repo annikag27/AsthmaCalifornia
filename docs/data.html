@@ -20,6 +20,41 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -30,7 +65,7 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
-<link href="./results.html" rel="next">
+<link href="./prevalence.html" rel="next">
 <link href="./index.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
@@ -127,14 +162,32 @@ ul.task-list li input[type="checkbox"] {
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="./prevalence.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Asthma Prevalence</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./emergencyvisits.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Asthma Emergency Department Visits</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./pollution.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">pollution</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="./results.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Results</span></span></a>
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Results</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./conclusion.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Conclusion</span></span></a>
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Conclusion</span></span></a>
   </div>
 </li>
     </ul>
@@ -148,7 +201,56 @@ ul.task-list li input[type="checkbox"] {
    
   <ul>
   <li><a href="#description" id="toc-description" class="nav-link active" data-scroll-target="#description"><span class="header-section-number">2.1</span> Description</a></li>
-  <li><a href="#missing-value-analysis" id="toc-missing-value-analysis" class="nav-link" data-scroll-target="#missing-value-analysis"><span class="header-section-number">2.2</span> Missing value analysis</a></li>
+  <li><a href="#asthma-prevalence-chis" id="toc-asthma-prevalence-chis" class="nav-link" data-scroll-target="#asthma-prevalence-chis"><span class="header-section-number">2.2</span> Asthma Prevalence (CHIS)</a>
+  <ul class="collapse">
+  <li><a href="#source" id="toc-source" class="nav-link" data-scroll-target="#source"><span class="header-section-number">2.2.1</span> Source</a></li>
+  <li><a href="#raw-data-overview" id="toc-raw-data-overview" class="nav-link" data-scroll-target="#raw-data-overview"><span class="header-section-number">2.2.2</span> Raw Data Overview</a></li>
+  <li><a href="#missing-values" id="toc-missing-values" class="nav-link" data-scroll-target="#missing-values"><span class="header-section-number">2.2.3</span> Missing Values</a></li>
+  <li><a href="#cleaning-and-processing" id="toc-cleaning-and-processing" class="nav-link" data-scroll-target="#cleaning-and-processing"><span class="header-section-number">2.2.4</span> Cleaning and Processing :</a></li>
+  </ul></li>
+  <li><a href="#asthma-emergency-department-visits-chis" id="toc-asthma-emergency-department-visits-chis" class="nav-link" data-scroll-target="#asthma-emergency-department-visits-chis"><span class="header-section-number">2.3</span> Asthma Emergency Department Visits (CHIS)</a>
+  <ul class="collapse">
+  <li><a href="#source-1" id="toc-source-1" class="nav-link" data-scroll-target="#source-1"><span class="header-section-number">2.3.1</span> Source</a></li>
+  <li><a href="#raw-overview" id="toc-raw-overview" class="nav-link" data-scroll-target="#raw-overview"><span class="header-section-number">2.3.2</span> Raw Overview</a></li>
+  <li><a href="#missing-value-analysis" id="toc-missing-value-analysis" class="nav-link" data-scroll-target="#missing-value-analysis"><span class="header-section-number">2.3.3</span> Missing Value Analysis</a></li>
+  </ul></li>
+  <li><a href="#dataset-3" id="toc-dataset-3" class="nav-link" data-scroll-target="#dataset-3"><span class="header-section-number">2.4</span> Dataset 3</a>
+  <ul class="collapse">
+  <li><a href="#source-2" id="toc-source-2" class="nav-link" data-scroll-target="#source-2"><span class="header-section-number">2.4.1</span> Source</a></li>
+  <li><a href="#preview-of-final-dataframe" id="toc-preview-of-final-dataframe" class="nav-link" data-scroll-target="#preview-of-final-dataframe"><span class="header-section-number">2.4.2</span> Preview of Final DataFrame</a></li>
+  </ul></li>
+  <li><a href="#dataset-4" id="toc-dataset-4" class="nav-link" data-scroll-target="#dataset-4"><span class="header-section-number">2.5</span> Dataset 4</a>
+  <ul class="collapse">
+  <li><a href="#source-3" id="toc-source-3" class="nav-link" data-scroll-target="#source-3"><span class="header-section-number">2.5.1</span> Source</a></li>
+  <li><a href="#raw-overview-1" id="toc-raw-overview-1" class="nav-link" data-scroll-target="#raw-overview-1"><span class="header-section-number">2.5.2</span> Raw Overview</a></li>
+  <li><a href="#missing-value-analysis-1" id="toc-missing-value-analysis-1" class="nav-link" data-scroll-target="#missing-value-analysis-1"><span class="header-section-number">2.5.3</span> Missing Value Analysis</a></li>
+  <li><a href="#cleaning-steps" id="toc-cleaning-steps" class="nav-link" data-scroll-target="#cleaning-steps"><span class="header-section-number">2.5.4</span> Cleaning Steps</a></li>
+  <li><a href="#preview-of-final-dataframe-1" id="toc-preview-of-final-dataframe-1" class="nav-link" data-scroll-target="#preview-of-final-dataframe-1"><span class="header-section-number">2.5.5</span> Preview of Final DataFrame</a></li>
+  </ul></li>
+  <li><a href="#dataset-5" id="toc-dataset-5" class="nav-link" data-scroll-target="#dataset-5"><span class="header-section-number">2.6</span> Dataset 5</a>
+  <ul class="collapse">
+  <li><a href="#source-4" id="toc-source-4" class="nav-link" data-scroll-target="#source-4"><span class="header-section-number">2.6.1</span> Source</a></li>
+  <li><a href="#raw-overview-2" id="toc-raw-overview-2" class="nav-link" data-scroll-target="#raw-overview-2"><span class="header-section-number">2.6.2</span> Raw Overview</a></li>
+  <li><a href="#missing-value-analysis-2" id="toc-missing-value-analysis-2" class="nav-link" data-scroll-target="#missing-value-analysis-2"><span class="header-section-number">2.6.3</span> Missing Value Analysis</a></li>
+  <li><a href="#cleaning-steps-1" id="toc-cleaning-steps-1" class="nav-link" data-scroll-target="#cleaning-steps-1"><span class="header-section-number">2.6.4</span> Cleaning Steps</a></li>
+  <li><a href="#preview-of-final-dataframe-2" id="toc-preview-of-final-dataframe-2" class="nav-link" data-scroll-target="#preview-of-final-dataframe-2"><span class="header-section-number">2.6.5</span> Preview of Final DataFrame</a></li>
+  </ul></li>
+  <li><a href="#dataset-6" id="toc-dataset-6" class="nav-link" data-scroll-target="#dataset-6"><span class="header-section-number">2.7</span> Dataset 6</a>
+  <ul class="collapse">
+  <li><a href="#source-5" id="toc-source-5" class="nav-link" data-scroll-target="#source-5"><span class="header-section-number">2.7.1</span> Source</a></li>
+  <li><a href="#raw-overview-3" id="toc-raw-overview-3" class="nav-link" data-scroll-target="#raw-overview-3"><span class="header-section-number">2.7.2</span> Raw Overview</a></li>
+  <li><a href="#missing-value-analysis-3" id="toc-missing-value-analysis-3" class="nav-link" data-scroll-target="#missing-value-analysis-3"><span class="header-section-number">2.7.3</span> Missing Value Analysis</a></li>
+  <li><a href="#cleaning-steps-2" id="toc-cleaning-steps-2" class="nav-link" data-scroll-target="#cleaning-steps-2"><span class="header-section-number">2.7.4</span> Cleaning Steps</a></li>
+  <li><a href="#preview-of-final-dataframe-3" id="toc-preview-of-final-dataframe-3" class="nav-link" data-scroll-target="#preview-of-final-dataframe-3"><span class="header-section-number">2.7.5</span> Preview of Final DataFrame</a></li>
+  </ul></li>
+  <li><a href="#dataset-7" id="toc-dataset-7" class="nav-link" data-scroll-target="#dataset-7"><span class="header-section-number">2.8</span> Dataset 7</a>
+  <ul class="collapse">
+  <li><a href="#source-6" id="toc-source-6" class="nav-link" data-scroll-target="#source-6"><span class="header-section-number">2.8.1</span> Source</a></li>
+  <li><a href="#raw-overview-4" id="toc-raw-overview-4" class="nav-link" data-scroll-target="#raw-overview-4"><span class="header-section-number">2.8.2</span> Raw Overview</a></li>
+  <li><a href="#missing-value-analysis-4" id="toc-missing-value-analysis-4" class="nav-link" data-scroll-target="#missing-value-analysis-4"><span class="header-section-number">2.8.3</span> Missing Value Analysis</a></li>
+  <li><a href="#cleaning-steps-3" id="toc-cleaning-steps-3" class="nav-link" data-scroll-target="#cleaning-steps-3"><span class="header-section-number">2.8.4</span> Cleaning Steps</a></li>
+  <li><a href="#preview-of-final-dataframe-4" id="toc-preview-of-final-dataframe-4" class="nav-link" data-scroll-target="#preview-of-final-dataframe-4"><span class="header-section-number">2.8.5</span> Preview of Final DataFrame</a></li>
+  </ul></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/annikag27/AsthmaCalifornia/edit/main/data.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/annikag27/AsthmaCalifornia/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -176,11 +278,447 @@ ul.task-list li input[type="checkbox"] {
 
 <section id="description" class="level2" data-number="2.1">
 <h2 data-number="2.1" class="anchored" data-anchor-id="description"><span class="header-section-number">2.1</span> Description</h2>
+<p>This analysis draws from multiple publicly available datasets related to asthma prevalence and environmental conditions in California. Each source was cleaned, standardized, and prepared for visual exploration and comparison across counties and years.</p>
 </section>
-<section id="missing-value-analysis" class="level2" data-number="2.2">
-<h2 data-number="2.2" class="anchored" data-anchor-id="missing-value-analysis"><span class="header-section-number">2.2</span> Missing value analysis</h2>
+<section id="asthma-prevalence-chis" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="asthma-prevalence-chis"><span class="header-section-number">2.2</span> Asthma Prevalence (CHIS)</h2>
+<section id="source" class="level3" data-number="2.2.1">
+<h3 data-number="2.2.1" class="anchored" data-anchor-id="source"><span class="header-section-number">2.2.1</span> Source</h3>
+<p>Asthma Prevalence Source: https://data.chhs.ca.gov/dataset/asthma-prevalence</p>
+<p>To prepare the CHIS Current Asthma Prevalence by County dataset for analysis, I first standardized and simplified the structure so that each row represented a single county–period prevalence estimate. The raw dataset includes multiple stratified estimates for each county (by age group, population subgroup, and special groupings). For this project, I focused on the broadest and most interpretable measure, filtering the dataset to retain only rows corresponding to the Total population and All ages categories. This ensures comparability across counties and avoids fragmented or duplicated prevalence estimates. I then standardized column names for consistency and ease of use in subsequent analysis.</p>
+<p>A key cleaning step involved fixing an encoding issue in the years column: the two-year period labels (e.g., “2015–2016”) contained non-ASCII dash characters rendered as replacement symbols (“�”), which would interfere with plotting, grouping, and joining. I replaced all non-ASCII characters with a standard hyphen, producing clean period labels such as “2015-2016”, “2017-2018”, and so on. From the cleaned dataset, I retained only the variables relevant to this analysis—county name, two-year period, and current asthma prevalence—and separated the statewide row (“California”) from the county-level rows. Isolating the statewide estimate allows for clear visualization of overall trends, while the county-level dataset supports exploration of geographic variation. These steps produced a tidy, analysis-ready panel dataset suitable for multi-year visualizations and for contextualizing asthma burden across California.</p>
+</section>
+<section id="raw-data-overview" class="level3" data-number="2.2.2">
+<h3 data-number="2.2.2" class="anchored" data-anchor-id="raw-data-overview"><span class="header-section-number">2.2.2</span> Raw Data Overview</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+✔ dplyr     1.1.4     ✔ readr     2.1.5
+✔ forcats   1.0.0     ✔ stringr   1.5.1
+✔ ggplot2   4.0.0     ✔ tibble    3.3.0
+✔ lubridate 1.9.4     ✔ tidyr     1.3.1
+✔ purrr     1.1.0     
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(janitor)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'janitor'
+
+The following objects are masked from 'package:stats':
+
+    chisq.test, fisher.test</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>prev <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"current-asthma-prevalence-by-county-2015_2022.csv"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">clean_names</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>Rows: 1652 Columns: 8
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (7): COUNTY, YEARS, STRATA, AGE GROUP, 95% CONFIDENCE INTERVAL, COUNTIES...
+dbl (1): CURRENT PREVALENCE
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># inspect</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(prev)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 1,652
+Columns: 8
+$ county                          &lt;chr&gt; "California", "Alameda", "Alpine", "Am…
+$ years                           &lt;chr&gt; "2015\x962016", "2015\x962016", "2015\…
+$ strata                          &lt;chr&gt; "Total population", "Total population"…
+$ age_group                       &lt;chr&gt; "All ages", "All ages", "All ages", "A…
+$ current_prevalence              &lt;dbl&gt; 8.7, 9.1, 9.3, 9.3, 9.4, 9.3, 7.3, 12.…
+$ x95_percent_confidence_interval &lt;chr&gt; "(8.1\x969.3)", "(5.9\x9612.2)", "(4.1…
+$ counties_grouped                &lt;chr&gt; NA, NA, "Alpine, Amador, Calaveras, In…
+$ comment                         &lt;chr&gt; NA, NA, NA, NA, "Estimate is statistic…</code></pre>
+</div>
+</div>
+<p>Rows: 1,652 Columns: 8 Years: 2015–2021 (in 2-year periods) Stratification: By age group, population subgroup, and county groups Original variables:county, years, strata, age_group, current_prevalence, etc.</p>
+</section>
+<section id="missing-values" class="level3" data-number="2.2.3">
+<h3 data-number="2.2.3" class="anchored" data-anchor-id="missing-values"><span class="header-section-number">2.2.3</span> Missing Values</h3>
+<p>The original dataset contains several NA values in grouping columns (e.g., counties_grouped) and confidence intervals. These were not used in our final analysis, so missingness in these columns was not imputed. All rows with missing current_prevalence were dropped.</p>
+</section>
+<section id="cleaning-and-processing" class="level3" data-number="2.2.4">
+<h3 data-number="2.2.4" class="anchored" data-anchor-id="cleaning-and-processing"><span class="header-section-number">2.2.4</span> Cleaning and Processing :</h3>
+<p>Steps Taken: Filtered to Total population and All ages Fixed encoding issue in years (non-ASCII dashes → -) Selected relevant columns: county, years_period, prevalence Separated California statewide estimates from county-level estimates</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>prev_clean <span class="ot">&lt;-</span> prev <span class="sc">|&gt;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    strata <span class="sc">==</span> <span class="st">"Total population"</span>,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    age_group <span class="sc">==</span> <span class="st">"All ages"</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Replace all possible bad dash encodings:</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">years =</span> <span class="fu">str_replace_all</span>(years, <span class="st">"[^</span><span class="sc">\x20</span><span class="st">-</span><span class="sc">\x7E</span><span class="st">]"</span>, <span class="st">"-"</span>),</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">years =</span> <span class="fu">str_replace_all</span>(years, <span class="st">"[–—]"</span>, <span class="st">"-"</span>),</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">years_period =</span> years</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    county,</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    years_period,</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">prevalence =</span> current_prevalence</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slice_head</span>(prev_clean, <span class="at">n =</span> <span class="dv">10</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 10 × 3
+   county       years_period prevalence
+   &lt;chr&gt;        &lt;chr&gt;             &lt;dbl&gt;
+ 1 California   2015-2016           8.7
+ 2 Alameda      2015-2016           9.1
+ 3 Alpine       2015-2016           9.3
+ 4 Amador       2015-2016           9.3
+ 5 Butte        2015-2016           9.4
+ 6 Calaveras    2015-2016           9.3
+ 7 Colusa       2015-2016           7.3
+ 8 Contra Costa 2015-2016          12.1
+ 9 Del Norte    2015-2016           7.2
+10 El Dorado    2015-2016          12.1</code></pre>
+</div>
+</div>
+<p>Califronia Statewide Stuff:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>prev_statewide <span class="ot">&lt;-</span> prev_clean <span class="sc">|&gt;</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(county <span class="sc">==</span> <span class="st">"California"</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>prev_counties <span class="ot">&lt;-</span> prev_clean <span class="sc">|&gt;</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(county <span class="sc">!=</span> <span class="st">"California"</span>)</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(prev_clean, <span class="st">"prev_clean.rds"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section>
+</section>
+<section id="asthma-emergency-department-visits-chis" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="asthma-emergency-department-visits-chis"><span class="header-section-number">2.3</span> Asthma Emergency Department Visits (CHIS)</h2>
+<p>The Asthma Emergency Department (ED) Visit Rates by County dataset provides annual counts and age‑adjusted rates of asthma‑related emergency department visits for every California county from 2015 to 2023. Each observation represents a specific county–year combination and includes demographic stratifications by age group and race/ethnicity. The key variables of interest are the number of ED visits and the age‑adjusted ED visit rate per 10,000 residents. The data originate from the Department of Health Care Access and Information’s hospital ED records and include all licensed hospitals in the state. One important note from the documentation is that diagnostic coding transitioned from ICD‑9 to ICD‑10 in late 2015, so the dataset recommends avoiding comparisons between 2015 and 2016 for long‑term trend analysis.</p>
+<p>To prepare this dataset for analysis, we focused on creating a consistent, county‑level panel that aligns with our asthma prevalence dataset. First, we filtered the data to retain only observations categorized under “Total population” and “All ages”, ensuring comparability across counties and years without demographic stratification. We removed the statewide aggregate row (“California”), since our analysis centers on geographic variation at the county level. We then selected and renamed the most relevant variables: the raw number of asthma ED visits and the age‑adjusted visit rate. This resulted in a tidy dataset with four columns—county, year, ED visits, and ED visit rate—covering 406 county‑year observations</p>
+<section id="source-1" class="level3" data-number="2.3.1">
+<h3 data-number="2.3.1" class="anchored" data-anchor-id="source-1"><span class="header-section-number">2.3.1</span> Source</h3>
+<p>Source : https://data.chhs.ca.gov/dataset/asthma-emergency-department-visit-rates/resource/94d84508-8046-40a7-b8d9-0ed73b13b697</p>
+</section>
+<section id="raw-overview" class="level3" data-number="2.3.2">
+<h3 data-number="2.3.2" class="anchored" data-anchor-id="raw-overview"><span class="header-section-number">2.3.2</span> Raw Overview</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>edvisits <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"asthma-emergency-department-visit-rates-by-county-2015_2023.csv"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">clean_names</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>Rows: 6962 Columns: 8
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (5): COUNTY, STRATA, STRATA NAME, AGE GROUP, COMMENT
+dbl (2): YEAR, AGE-ADJUSTED ED VISIT RATE
+num (1): NUMBER OF ED VISITS
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># inspect</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(edvisits)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 6,962
+Columns: 8
+$ county                     &lt;chr&gt; "California", "Alameda", "Alpine", "Amador"…
+$ year                       &lt;dbl&gt; 2015, 2015, 2015, 2015, 2015, 2015, 2015, 2…
+$ strata                     &lt;chr&gt; "Total population", "Total population", "To…
+$ strata_name                &lt;chr&gt; "All ages", "All ages", "All ages", "All ag…
+$ age_group                  &lt;chr&gt; "All ages", "All ages", "All ages", "All ag…
+$ number_of_ed_visits        &lt;dbl&gt; 191904, 9939, 0, 196, 1044, 185, 97, 6858, …
+$ age_adjusted_ed_visit_rate &lt;dbl&gt; 50.4, 64.3, 0.0, 58.4, 50.2, 48.0, 41.4, 65…
+$ comment                    &lt;chr&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,…</code></pre>
+</div>
+</div>
+</section>
+<section id="missing-value-analysis" class="level3" data-number="2.3.3">
+<h3 data-number="2.3.3" class="anchored" data-anchor-id="missing-value-analysis"><span class="header-section-number">2.3.3</span> Missing Value Analysis</h3>
+<p>We did not conduct formal missing value analysis, as our filtering steps implicitly removed rows with stratified or incomplete data. The resulting dataset contains complete county-level data from 2015 to 2023 with no missing values in the key outcome variables. ### Cleaning Steps</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter to county-level, all ages, total population</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>edvisits_clean <span class="ot">&lt;-</span> edvisits <span class="sc">|&gt;</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    strata <span class="sc">==</span> <span class="st">"Total population"</span>,</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    strata_name <span class="sc">==</span> <span class="st">"All ages"</span>,</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    age_group <span class="sc">==</span> <span class="st">"All ages"</span>,</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    county <span class="sc">!=</span> <span class="st">"California"</span>  <span class="co"># remove statewide row</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    county,</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    year,</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    number_of_ed_visits,</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    age_adjusted_ed_visit_rate</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">ed_visits =</span> number_of_ed_visits,</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">ed_visit_rate =</span> age_adjusted_ed_visit_rate</span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Quick check</span></span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(edvisits_clean)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 406
+Columns: 4
+$ county        &lt;chr&gt; "Alameda", "Alpine", "Amador", "Butte", "Calaveras", "Co…
+$ year          &lt;dbl&gt; 2015, 2015, 2015, 2015, 2015, 2015, 2015, 2015, 2015, 20…
+$ ed_visits     &lt;dbl&gt; 9939, 0, 196, 1044, 185, 97, 6858, 140, 592, 7936, 122, …
+$ ed_visit_rate &lt;dbl&gt; 64.3, 0.0, 58.4, 50.2, 48.0, 41.4, 65.2, 53.0, 36.4, 77.…</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Save for cross-chapter use</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(edvisits_clean, <span class="st">"edvisits_clean.rds"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section>
+</section>
+<section id="dataset-3" class="level2" data-number="2.4">
+<h2 data-number="2.4" class="anchored" data-anchor-id="dataset-3"><span class="header-section-number">2.4</span> Dataset 3</h2>
+<section id="source-2" class="level3" data-number="2.4.1">
+<h3 data-number="2.4.1" class="anchored" data-anchor-id="source-2"><span class="header-section-number">2.4.1</span> Source</h3>
+<p>https://aqs.epa.gov/aqsweb/airdata/download_files.html#Raw ### Raw Overview Downloaded each years csv and created a massiv edata frame w ciltered CA values ### Missing Value Analysis ### Cleaning Steps</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(readr)</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(janitor)</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(purrr)</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(stringr)</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>path <span class="ot">&lt;-</span> <span class="st">"aqi/"</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="co"># List all CSV files inside the folder</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>files <span class="ot">&lt;-</span> <span class="fu">list.files</span>(path, <span class="at">pattern =</span> <span class="st">"</span><span class="sc">\\</span><span class="st">.csv$"</span>, <span class="at">full.names =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Load, clean, combine</span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>aqi_ca <span class="ot">&lt;-</span> <span class="fu">map_df</span>(files, <span class="cf">function</span>(f) {</span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Extract year from filename using regex</span></span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>  year_detect <span class="ot">&lt;-</span> <span class="fu">str_extract</span>(f, <span class="st">"</span><span class="sc">\\</span><span class="st">d{4}"</span>) <span class="sc">|&gt;</span> <span class="fu">as.numeric</span>()</span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>  df <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(f, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">clean_names</span>()</span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Filter to California if column exists</span></span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="st">"state"</span> <span class="sc">%in%</span> <span class="fu">names</span>(df)) {</span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>    df <span class="ot">&lt;-</span> df <span class="sc">|&gt;</span> <span class="fu">filter</span>(state <span class="sc">==</span> <span class="st">"California"</span>)</span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Add year column if not already present</span></span>
+<span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="st">"year"</span> <span class="sc">%in%</span> <span class="fu">names</span>(df)) {</span>
+<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a>    df <span class="ot">&lt;-</span> df <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">year =</span> year_detect)</span>
+<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a>  df</span>
+<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section>
+<section id="preview-of-final-dataframe" class="level3" data-number="2.4.2">
+<h3 data-number="2.4.2" class="anchored" data-anchor-id="preview-of-final-dataframe"><span class="header-section-number">2.4.2</span> Preview of Final DataFrame</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(aqi_ca)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 1,283
+Columns: 18
+$ state                               &lt;chr&gt; "California", "California", "Calif…
+$ county                              &lt;chr&gt; "Alameda", "Amador", "Butte", "Cal…
+$ year                                &lt;dbl&gt; 2000, 2000, 2000, 2000, 2000, 2000…
+$ days_with_aqi                       &lt;dbl&gt; 366, 366, 361, 364, 365, 366, 134,…
+$ good_days                           &lt;dbl&gt; 272, 238, 216, 244, 296, 212, 131,…
+$ moderate_days                       &lt;dbl&gt; 80, 83, 98, 72, 64, 131, 3, 109, 1…
+$ unhealthy_for_sensitive_groups_days &lt;dbl&gt; 11, 34, 40, 34, 5, 22, 0, 44, 89, …
+$ unhealthy_days                      &lt;dbl&gt; 2, 11, 7, 14, 0, 1, 0, 29, 87, 0, …
+$ very_unhealthy_days                 &lt;dbl&gt; 1, 0, 0, 0, 0, 0, 0, 2, 19, 0, 0, …
+$ hazardous_days                      &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0…
+$ max_aqi                             &lt;dbl&gt; 209, 192, 181, 200, 105, 172, 59, …
+$ x90th_percentile_aqi                &lt;dbl&gt; 71, 112, 108, 115, 64, 90, 38, 136…
+$ median_aqi                          &lt;dbl&gt; 41, 44, 45, 39, 37, 47, 18, 51, 11…
+$ days_co                             &lt;dbl&gt; 2, 15, 16, 29, 0, 0, 0, 0, 2, 0, 0…
+$ days_no2                            &lt;dbl&gt; 117, 0, 40, 0, 0, 22, 0, 22, 21, 0…
+$ days_ozone                          &lt;dbl&gt; 172, 351, 254, 303, 268, 189, 0, 3…
+$ days_pm2_5                          &lt;dbl&gt; 75, 0, 32, 31, 45, 154, 90, 17, 11…
+$ days_pm10                           &lt;dbl&gt; 0, 0, 19, 1, 52, 1, 44, 0, 0, 38, …</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(aqi_ca, <span class="st">"aqi_ca.rds"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>aqi_ca <span class="sc">|&gt;</span> <span class="fu">count</span>(year)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 24 × 2
+    year     n
+   &lt;dbl&gt; &lt;int&gt;
+ 1  2000    56
+ 2  2001    55
+ 3  2002    54
+ 4  2003    54
+ 5  2004    53
+ 6  2005    53
+ 7  2006    53
+ 8  2007    53
+ 9  2008    53
+10  2009    53
+# ℹ 14 more rows</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>aqi_ca <span class="sc">|&gt;</span> <span class="fu">count</span>(county)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 57 × 2
+   county           n
+   &lt;chr&gt;        &lt;int&gt;
+ 1 Alameda         24
+ 2 Alpine           6
+ 3 Amador          24
+ 4 Butte           24
+ 5 Calaveras       24
+ 6 Colusa          24
+ 7 Contra Costa    24
+ 8 Del Norte       24
+ 9 El Dorado       24
+10 Fresno          24
+# ℹ 47 more rows</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>aqi_ca <span class="sc">|&gt;</span> <span class="fu">summarise</span>(<span class="fu">across</span>(<span class="fu">everything</span>(), <span class="sc">~</span><span class="fu">sum</span>(<span class="fu">is.na</span>(.))))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 18
+  state county  year days_with_aqi good_days moderate_days
+  &lt;int&gt;  &lt;int&gt; &lt;int&gt;         &lt;int&gt;     &lt;int&gt;         &lt;int&gt;
+1     0      0     0             0         0             0
+# ℹ 12 more variables: unhealthy_for_sensitive_groups_days &lt;int&gt;,
+#   unhealthy_days &lt;int&gt;, very_unhealthy_days &lt;int&gt;, hazardous_days &lt;int&gt;,
+#   max_aqi &lt;int&gt;, x90th_percentile_aqi &lt;int&gt;, median_aqi &lt;int&gt;, days_co &lt;int&gt;,
+#   days_no2 &lt;int&gt;, days_ozone &lt;int&gt;, days_pm2_5 &lt;int&gt;, days_pm10 &lt;int&gt;</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="dataset-4" class="level2" data-number="2.5">
+<h2 data-number="2.5" class="anchored" data-anchor-id="dataset-4"><span class="header-section-number">2.5</span> Dataset 4</h2>
+<section id="source-3" class="level3" data-number="2.5.1">
+<h3 data-number="2.5.1" class="anchored" data-anchor-id="source-3"><span class="header-section-number">2.5.1</span> Source</h3>
+</section>
+<section id="raw-overview-1" class="level3" data-number="2.5.2">
+<h3 data-number="2.5.2" class="anchored" data-anchor-id="raw-overview-1"><span class="header-section-number">2.5.2</span> Raw Overview</h3>
+</section>
+<section id="missing-value-analysis-1" class="level3" data-number="2.5.3">
+<h3 data-number="2.5.3" class="anchored" data-anchor-id="missing-value-analysis-1"><span class="header-section-number">2.5.3</span> Missing Value Analysis</h3>
+</section>
+<section id="cleaning-steps" class="level3" data-number="2.5.4">
+<h3 data-number="2.5.4" class="anchored" data-anchor-id="cleaning-steps"><span class="header-section-number">2.5.4</span> Cleaning Steps</h3>
+</section>
+<section id="preview-of-final-dataframe-1" class="level3" data-number="2.5.5">
+<h3 data-number="2.5.5" class="anchored" data-anchor-id="preview-of-final-dataframe-1"><span class="header-section-number">2.5.5</span> Preview of Final DataFrame</h3>
+</section>
+</section>
+<section id="dataset-5" class="level2" data-number="2.6">
+<h2 data-number="2.6" class="anchored" data-anchor-id="dataset-5"><span class="header-section-number">2.6</span> Dataset 5</h2>
+<section id="source-4" class="level3" data-number="2.6.1">
+<h3 data-number="2.6.1" class="anchored" data-anchor-id="source-4"><span class="header-section-number">2.6.1</span> Source</h3>
+</section>
+<section id="raw-overview-2" class="level3" data-number="2.6.2">
+<h3 data-number="2.6.2" class="anchored" data-anchor-id="raw-overview-2"><span class="header-section-number">2.6.2</span> Raw Overview</h3>
+</section>
+<section id="missing-value-analysis-2" class="level3" data-number="2.6.3">
+<h3 data-number="2.6.3" class="anchored" data-anchor-id="missing-value-analysis-2"><span class="header-section-number">2.6.3</span> Missing Value Analysis</h3>
+</section>
+<section id="cleaning-steps-1" class="level3" data-number="2.6.4">
+<h3 data-number="2.6.4" class="anchored" data-anchor-id="cleaning-steps-1"><span class="header-section-number">2.6.4</span> Cleaning Steps</h3>
+</section>
+<section id="preview-of-final-dataframe-2" class="level3" data-number="2.6.5">
+<h3 data-number="2.6.5" class="anchored" data-anchor-id="preview-of-final-dataframe-2"><span class="header-section-number">2.6.5</span> Preview of Final DataFrame</h3>
+</section>
+</section>
+<section id="dataset-6" class="level2" data-number="2.7">
+<h2 data-number="2.7" class="anchored" data-anchor-id="dataset-6"><span class="header-section-number">2.7</span> Dataset 6</h2>
+<section id="source-5" class="level3" data-number="2.7.1">
+<h3 data-number="2.7.1" class="anchored" data-anchor-id="source-5"><span class="header-section-number">2.7.1</span> Source</h3>
+</section>
+<section id="raw-overview-3" class="level3" data-number="2.7.2">
+<h3 data-number="2.7.2" class="anchored" data-anchor-id="raw-overview-3"><span class="header-section-number">2.7.2</span> Raw Overview</h3>
+</section>
+<section id="missing-value-analysis-3" class="level3" data-number="2.7.3">
+<h3 data-number="2.7.3" class="anchored" data-anchor-id="missing-value-analysis-3"><span class="header-section-number">2.7.3</span> Missing Value Analysis</h3>
+</section>
+<section id="cleaning-steps-2" class="level3" data-number="2.7.4">
+<h3 data-number="2.7.4" class="anchored" data-anchor-id="cleaning-steps-2"><span class="header-section-number">2.7.4</span> Cleaning Steps</h3>
+</section>
+<section id="preview-of-final-dataframe-3" class="level3" data-number="2.7.5">
+<h3 data-number="2.7.5" class="anchored" data-anchor-id="preview-of-final-dataframe-3"><span class="header-section-number">2.7.5</span> Preview of Final DataFrame</h3>
+</section>
+</section>
+<section id="dataset-7" class="level2" data-number="2.8">
+<h2 data-number="2.8" class="anchored" data-anchor-id="dataset-7"><span class="header-section-number">2.8</span> Dataset 7</h2>
+<section id="source-6" class="level3" data-number="2.8.1">
+<h3 data-number="2.8.1" class="anchored" data-anchor-id="source-6"><span class="header-section-number">2.8.1</span> Source</h3>
+</section>
+<section id="raw-overview-4" class="level3" data-number="2.8.2">
+<h3 data-number="2.8.2" class="anchored" data-anchor-id="raw-overview-4"><span class="header-section-number">2.8.2</span> Raw Overview</h3>
+</section>
+<section id="missing-value-analysis-4" class="level3" data-number="2.8.3">
+<h3 data-number="2.8.3" class="anchored" data-anchor-id="missing-value-analysis-4"><span class="header-section-number">2.8.3</span> Missing Value Analysis</h3>
+</section>
+<section id="cleaning-steps-3" class="level3" data-number="2.8.4">
+<h3 data-number="2.8.4" class="anchored" data-anchor-id="cleaning-steps-3"><span class="header-section-number">2.8.4</span> Cleaning Steps</h3>
+</section>
+<section id="preview-of-final-dataframe-4" class="level3" data-number="2.8.5">
+<h3 data-number="2.8.5" class="anchored" data-anchor-id="preview-of-final-dataframe-4"><span class="header-section-number">2.8.5</span> Preview of Final DataFrame</h3>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->
@@ -591,8 +1129,8 @@ ul.task-list li input[type="checkbox"] {
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./results.html" class="pagination-link" aria-label="Results">
-        <span class="nav-page-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Results</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./prevalence.html" class="pagination-link" aria-label="Asthma Prevalence">
+        <span class="nav-page-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Asthma Prevalence</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

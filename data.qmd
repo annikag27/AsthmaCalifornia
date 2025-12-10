@@ -2,4 +2,213 @@
 
 ## Description
 
-## Missing value analysis
+This analysis draws from multiple publicly available datasets related to asthma prevalence and environmental conditions in California. Each source was cleaned, standardized, and prepared for visual exploration and comparison across counties and years.
+
+## Asthma Prevalence (CHIS)
+### Source
+Asthma Prevalence Source: https://data.chhs.ca.gov/dataset/asthma-prevalence
+
+To prepare the CHIS Current Asthma Prevalence by County dataset for analysis, I first standardized and simplified the structure so that each row represented a single county–period prevalence estimate. The raw dataset includes multiple stratified estimates for each county (by age group, population subgroup, and special groupings). For this project, I focused on the broadest and most interpretable measure, filtering the dataset to retain only rows corresponding to the Total population and All ages categories. This ensures comparability across counties and avoids fragmented or duplicated prevalence estimates. I then standardized column names for consistency and ease of use in subsequent analysis.
+
+A key cleaning step involved fixing an encoding issue in the years column: the two-year period labels (e.g., “2015–2016”) contained non-ASCII dash characters rendered as replacement symbols (“�”), which would interfere with plotting, grouping, and joining. I replaced all non-ASCII characters with a standard hyphen, producing clean period labels such as “2015-2016”, “2017-2018”, and so on. From the cleaned dataset, I retained only the variables relevant to this analysis—county name, two-year period, and current asthma prevalence—and separated the statewide row (“California”) from the county-level rows. Isolating the statewide estimate allows for clear visualization of overall trends, while the county-level dataset supports exploration of geographic variation. These steps produced a tidy, analysis-ready panel dataset suitable for multi-year visualizations and for contextualizing asthma burden across California.
+
+### Raw Data Overview
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(dplyr)
+library(ggplot2)
+
+prev <- read_csv("current-asthma-prevalence-by-county-2015_2022.csv") |>
+  clean_names()
+
+# inspect
+glimpse(prev)
+
+
+```
+Rows: 1,652
+Columns: 8
+Years: 2015–2021 (in 2-year periods)
+Stratification: By age group, population subgroup, and county groups
+Original variables:county, years, strata, age_group, current_prevalence, etc.
+
+### Missing Values 
+The original dataset contains several NA values in grouping columns (e.g., counties_grouped) and confidence intervals. These were not used in our final analysis, so missingness in these columns was not imputed. All rows with missing current_prevalence were dropped.
+
+### Cleaning and Processing : 
+Steps Taken:
+Filtered to Total population and All ages
+Fixed encoding issue in years (non-ASCII dashes → -)
+Selected relevant columns: county, years_period, prevalence
+Separated California statewide estimates from county-level estimates
+
+```{r prev-clean}
+prev_clean <- prev |>
+  filter(
+    strata == "Total population",
+    age_group == "All ages"
+  ) |>
+  mutate(
+    # Replace all possible bad dash encodings:
+    years = str_replace_all(years, "[^\x20-\x7E]", "-"),
+    years = str_replace_all(years, "[–—]", "-"),
+    years_period = years
+  ) |>
+  select(
+    county,
+    years_period,
+    prevalence = current_prevalence
+  )
+```
+
+```{r}
+slice_head(prev_clean, n = 10)
+```
+
+Califronia Statewide Stuff: 
+```{r}
+prev_statewide <- prev_clean |>
+  filter(county == "California")
+
+prev_counties <- prev_clean |>
+  filter(county != "California")
+
+saveRDS(prev_clean, "prev_clean.rds")
+```
+
+## Asthma Emergency Department Visits (CHIS)
+The Asthma Emergency Department (ED) Visit Rates by County dataset provides annual counts and age‑adjusted rates of asthma‑related emergency department visits for every California county from 2015 to 2023. Each observation represents a specific county–year combination and includes demographic stratifications by age group and race/ethnicity. The key variables of interest are the number of ED visits and the age‑adjusted ED visit rate per 10,000 residents. The data originate from the Department of Health Care Access and Information’s hospital ED records and include all licensed hospitals in the state. One important note from the documentation is that diagnostic coding transitioned from ICD‑9 to ICD‑10 in late 2015, so the dataset recommends avoiding comparisons between 2015 and 2016 for long‑term trend analysis.
+
+To prepare this dataset for analysis, we focused on creating a consistent, county‑level panel that aligns with our asthma prevalence dataset. First, we filtered the data to retain only observations categorized under “Total population” and “All ages”, ensuring comparability across counties and years without demographic stratification. We removed the statewide aggregate row (“California”), since our analysis centers on geographic variation at the county level. We then selected and renamed the most relevant variables: the raw number of asthma ED visits and the age‑adjusted visit rate. This resulted in a tidy dataset with four columns—county, year, ED visits, and ED visit rate—covering 406 county‑year observations
+
+### Source
+Source : https://data.chhs.ca.gov/dataset/asthma-emergency-department-visit-rates/resource/94d84508-8046-40a7-b8d9-0ed73b13b697
+
+### Raw Overview
+```{r}
+edvisits <- read_csv("asthma-emergency-department-visit-rates-by-county-2015_2023.csv") |>
+  clean_names()
+
+# inspect
+glimpse(edvisits)
+
+```
+
+### Missing Value Analysis 
+We did not conduct formal missing value analysis, as our filtering steps implicitly removed rows with stratified or incomplete data. The resulting dataset contains complete county-level data from 2015 to 2023 with no missing values in the key outcome variables.
+### Cleaning Steps
+```{r}
+# Filter to county-level, all ages, total population
+edvisits_clean <- edvisits |>
+  filter(
+    strata == "Total population",
+    strata_name == "All ages",
+    age_group == "All ages",
+    county != "California"  # remove statewide row
+  ) |>
+  select(
+    county,
+    year,
+    number_of_ed_visits,
+    age_adjusted_ed_visit_rate
+  ) |>
+  rename(
+    ed_visits = number_of_ed_visits,
+    ed_visit_rate = age_adjusted_ed_visit_rate
+  )
+
+# Quick check
+glimpse(edvisits_clean)
+
+# Save for cross-chapter use
+saveRDS(edvisits_clean, "edvisits_clean.rds")
+```
+
+
+
+## Dataset 3 
+### Source
+https://aqs.epa.gov/aqsweb/airdata/download_files.html#Raw
+### Raw Overview
+Downloaded each years csv and created a massiv edata frame w ciltered CA values
+### Missing Value Analysis 
+### Cleaning Steps
+```{r}
+
+library(dplyr)
+library(readr)
+library(janitor)
+library(purrr)
+library(stringr)
+
+path <- "aqi/"
+
+# List all CSV files inside the folder
+files <- list.files(path, pattern = "\\.csv$", full.names = TRUE)
+
+# Load, clean, combine
+aqi_ca <- map_df(files, function(f) {
+  
+  # Extract year from filename using regex
+  year_detect <- str_extract(f, "\\d{4}") |> as.numeric()
+  
+  df <- read_csv(f, show_col_types = FALSE) |>
+    clean_names()
+  
+  # Filter to California if column exists
+  if ("state" %in% names(df)) {
+    df <- df |> filter(state == "California")
+  }
+  
+  # Add year column if not already present
+  if (!"year" %in% names(df)) {
+    df <- df |> mutate(year = year_detect)
+  }
+  
+  df
+})
+
+```
+
+### Preview of Final DataFrame
+```{r}
+glimpse(aqi_ca)
+saveRDS(aqi_ca, "aqi_ca.rds")
+
+```
+```{r}
+aqi_ca |> count(year)
+aqi_ca |> count(county)
+aqi_ca |> summarise(across(everything(), ~sum(is.na(.))))
+```
+
+
+## Dataset 4
+### Source
+### Raw Overview
+### Missing Value Analysis 
+### Cleaning Steps
+### Preview of Final DataFrame
+
+## Dataset 5
+### Source
+### Raw Overview
+### Missing Value Analysis 
+### Cleaning Steps
+### Preview of Final DataFrame
+
+## Dataset 6 
+### Source
+### Raw Overview
+### Missing Value Analysis 
+### Cleaning Steps
+### Preview of Final DataFrame
+
+## Dataset 7 
+### Source
+### Raw Overview
+### Missing Value Analysis 
+### Cleaning Steps
+### Preview of Final DataFrame
