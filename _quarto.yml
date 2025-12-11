@@ -29,7 +29,7 @@ book:
 
 format:
   html:
-    theme: solar
+    theme: simplex
     code-fold: true
 
 
