@@ -9,7 +9,7 @@ execute:
   global: true
 
 book:
-  title: "Asthma Related Mortality in California"
+  title: "Asthma and Pollution Outcomes in California"
   author:
     - Annika Gupta (ag5170)
   repo-url: https://github.com/annikag27/AsthmaCalifornia
