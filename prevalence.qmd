@@ -6,12 +6,14 @@ library(tidyverse)
 library(janitor)
 library(dplyr)
 library(ggplot2)
+library(sf)
+library(tigris)
+library(viridis)
 prev_clean <- readRDS("prev_clean.rds")
-
 ```
 
 
-First plot: 
+## Statewide Asthma Prevalence: 
 ```{r}
 
 prev_statewide <- dplyr::filter(prev_clean, county == "California")
@@ -32,25 +34,41 @@ ggplot(prev_statewide, aes(x = years_period, y = prevalence, group = 1)) +
   )
 
 ```
+Statewide asthma prevalence in California remained relatively stable between 2015 and 2022, fluctuating within a narrow range of about 8.7% to 8.9%. The slight dip in 2019–2020 followed by an increase in 2021–2022 may reflect shifts in healthcare access, reporting, or environmental exposures during COVID, instead of a large change in asthma prevalence. 
 
-Second Plot: 
+## County-wide Asthma Prevalence:  
 ```{r}
-prev_counties <- prev_clean |> dplyr::filter(county != "California")
+# Split statewide out
+statewide <- prev_clean |> filter(county == "California")
+prev_counties <- prev_clean |> filter(county != "California")
 
-
-ggplot(prev_counties, aes(x = years_period, y = prevalence, group = county)) +
-  geom_line(alpha = 0.4, color = "#5DA5DA") +
+ggplot() +
+  # county lines
+  geom_line(data = prev_counties,
+            aes(x = years_period, y = prevalence, group = county),
+            alpha = 0.35, color = "#80b1d3") +
+  
+  # statewide line
+  geom_line(data = statewide,
+            aes(x = years_period, y = prevalence, group = 1),
+            linewidth = 1.6, color = "#1f78b4") +
+  geom_point(data = statewide,
+             aes(x = years_period, y = prevalence),
+             size = 3, color = "#1f78b4") +
+  
   labs(
     title = "Asthma Prevalence by County, 2015–2022",
-    subtitle = "Each line represents one county",
+    subtitle = "Light lines = counties; Bold line = statewide mean (CHIS)",
     x = "Two-Year Period",
     y = "Prevalence (%)"
   ) +
   theme_minimal(base_size = 14) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-```
 
-Third Plot: 
+```
+County-level asthma prevalence in California shows substantial variation, with some counties consistently reporting rates several percentage points above or below the statewide average. Despite this spread, the statewide prevalence remained relatively stable from 2015–2022, fluctuating only between about 8.7–9%. This suggests that while local conditions drive meaningful differences at the county level, the overall asthma burden in California has not shifted dramatically over the past decade.
+
+## Specific County Asthma Prevalence:
 ```{r}
 interesting <- c("Fresno", "Los Angeles", "Marin", "Butte", "Kern", "San Francisco")
 
@@ -69,19 +87,69 @@ ggplot(prev_focus, aes(x = years_period, y = prevalence, color = county, group =
   theme_minimal(base_size = 14) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
+Selected counties show clear differences in asthma prevalence over time. Counties such as Fresno and Butte consistently report higher asthma prevalence, while San Francisco, Marin, and Los Angeles maintain lower levels across all periods. The stability of these county rankings suggests that structural or environmental factors—rather than short-term fluctuations—play a major role in shaping asthma burden across California.
 
-Fourth Plot: 
+## 2019 - 2020 Asthma Prevalence Chloropleth:
 ```{r}
-ggplot(prev_counties, aes(x = years_period, y = county, fill = prevalence)) +
-  geom_tile() +
-  scale_fill_viridis_c(option = "C") +
+wildfire_major5 <- c(
+  # August Complex
+  "mendocino", "trinity", "tehama", "glenn", "lake",
+  
+  # SCU Lightning Complex
+  "santa clara", "alameda", "stanislaus", "san joaquin", "contra costa",
+  
+  # LNU Lightning Complex
+  "napa", "sonoma", "solano", "yolo", "lake",
+  
+  # Creek Fire
+  "fresno", "madera",
+  
+  # North Complex
+  "butte", "plumas"
+)
+
+# load county geom
+ca_geom <- counties(state = "CA", cb = TRUE, year = 2023) |>
+  st_as_sf() |>
+  mutate(county = tolower(NAME)) |>
+  select(county, geometry)
+
+# filter for 2019 - 2020 period 
+prev_2020 <- prev_clean |>
+  filter(years_period == "2019-2020") |>
+  mutate(county = tolower(county)) |>
+  select(county, prevalence)
+
+map_prev <- ca_geom |>
+  left_join(prev_2020, by = "county") |>
+  mutate(wildfire_major = county %in% wildfire_major5)
+
+ggplot(map_prev) +
+  geom_sf(aes(fill = prevalence), color = "white", size = 0.2) +
+  geom_sf(
+    data = subset(map_prev, wildfire_major == TRUE),
+    fill = NA,
+    color = "red",
+    size = 0.5
+  ) +
+  scale_fill_viridis(
+    name = "Prevalence (%)",
+    option = "magma",
+    direction = -1,
+    na.value = "grey90"
+  ) +
   labs(
-    title = "Heatmap of Asthma Prevalence by County (2015–2022)",
-    x = "Two-Year Period",
-    y = "County",
-    fill = "Prevalence (%)"
+    title = "Asthma Prevalence by County in California (2019–2020)",
+    subtitle = "Outlines show counties impacted by the 5 largest wildfires of 2020",
+    caption = "Source: CHIS"
   ) +
   theme_minimal(base_size = 14) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-```
+  theme(
+    axis.text = element_blank(),
+    axis.title = element_blank(),
+    panel.grid = element_blank(),
+    plot.title = element_text(face = "bold")
+  )
 
+```
+The choropleth map shows substantial geographic variation in asthma prevalence across California in 2019–2020, with many Northern and Central counties reporting rates above the statewide average. Notably, several counties affected by the five largest wildfires of 2020 also exhibit relatively elevated asthma prevalence, suggesting a potential overlap between regions experiencing severe wildfire exposure and communities with higher asthma rates.

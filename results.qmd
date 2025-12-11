@@ -1,91 +1,202 @@
 # Results
+Across California, the spatial patterns of asthma prevalence and emergency department (ED) visit rates closely parallel the distribution of PM2.5 pollution. Counties with the highest asthma burden—particularly in the Central Valley and rural Northern California—also experience the greatest number of days with elevated PM2.5, reflecting persistent exposure to particulate pollution. This overlap suggests that chronic air quality challenges, intensified by recent wildfire seasons, likely contribute to worse respiratory outcomes in these regions.
 
-## Asthma Prevalence 
+The following plots examine this relationship more closely by visualizing geographic alignment, temporal trends, and distributional patterns across counties.
+
+## Set Up 
 Libraries:
 ```{r}
-library(tidyverse)
-library(janitor)
-library(dplyr)
 library(ggplot2)
-prev_clean <- readRDS("prev_clean.rds")
+library(dplyr)
+library(tigris)
+library(sf)
+library(forcats)
+library(tidyverse)
+library(gganimate)
+library(viridis)
 
+prev_clean <- readRDS("prev_clean.rds")
+edvisits_clean <- readRDS("edvisits_clean.rds")
+aqi_ca <- readRDS("aqi_ca.rds")
+hosp_clean <- readRDS("hosp_clean.rds")
+deaths_expanded <- readRDS("deaths_expanded.rds")
 ```
 
 
-First plot: 
+
+
+## Prevalence and PM2.5
 ```{r}
 
-prev_statewide <- dplyr::filter(prev_clean, county == "California")
-
-
-ggplot(prev_statewide, aes(x = years_period, y = prevalence, group = 1)) +
-  geom_line(size = 1.2, color = "#1D6996") +
-  geom_point(size = 3, color = "#1D6996") +
-  labs(
-    title = "Statewide Current Asthma Prevalence in California (CHIS)",
-    subtitle = "Two-year period estimates, 2015–2022",
-    x = "Two-Year Period",
-    y = "Prevalence (%)"
-  ) +
-  theme_minimal(base_size = 14) +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1)
+edvisits_clean2 <- edvisits_clean |>
+  mutate(
+    county = str_to_lower(county),
+    year   = as.numeric(year)
   )
 
-```
+hosp_clean2 <- hosp_clean |>
+  mutate(
+    county = str_to_lower(county),
+    year   = as.numeric(year)
+  )
 
-Second Plot: 
-```{r}
-prev_counties <- prev_clean |> dplyr::filter(county != "California")
+aqi_ca2 <- aqi_ca |>
+  mutate(
+    county = str_to_lower(county),
+    year   = as.numeric(year)
+  )
 
+prev_clean2 <- prev_clean |>
+  mutate(county = str_to_lower(county))
 
-ggplot(prev_counties, aes(x = years_period, y = prevalence, group = county)) +
-  geom_line(alpha = 0.4, color = "#5DA5DA") +
+pm25_2020 <- aqi_ca2 |>
+  filter(year == 2020) |>
+  group_by(county) |>
+  summarise(
+    pm25_days = mean(days_pm2_5, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+prev_2020 <- prev_clean2 |>
+  filter(years_period == "2019-2020") |>
+  select(county, prevalence)
+
+asthma_2020 <- pm25_2020 |>
+  left_join(
+    edvisits_clean2 |>
+      filter(year == 2020) |>
+      select(county, ed_visit_rate),
+    by = "county"
+  ) |>
+  left_join(
+    hosp_clean2 |>
+      filter(year == 2020) |>
+      select(county, hosp_rate),
+    by = "county"
+  ) |>
+  left_join(prev_2020, by = "county") |>
+  filter(!is.na(pm25_days))
+
+asthma_long <- asthma_2020 |>
+  rename(
+    `ED Visit Rate`        = ed_visit_rate,
+    `Hospitalization Rate` = hosp_rate,
+    `Prevalence (%)`       = prevalence
+  ) |>
+  pivot_longer(
+    cols = c(`ED Visit Rate`, `Hospitalization Rate`, `Prevalence (%)`),
+    names_to = "Outcome",
+    values_to = "Value"
+  )
+
+ggplot(asthma_long, aes(x = pm25_days, y = Value)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = "lm", se = FALSE, color = "firebrick") +
+  facet_wrap(~ Outcome, scales = "free_y") +
   labs(
-    title = "Asthma Prevalence by County, 2015–2022",
-    subtitle = "Each line represents one county",
-    x = "Two-Year Period",
-    y = "Prevalence (%)"
+    title = "Asthma Outcomes vs PM2.5 Exposure (2020)",
+    x = "PM2.5 Days (Annual Mean)",
+    y = "Outcome Value"
   ) +
-  theme_minimal(base_size = 14) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme_minimal(base_size = 16)
 ```
+Across all three outcomes—ED visits, hospitalizations, and asthma prevalence—there is no strong linear association with PM2.5 exposure in 2020. The scatter is wide for each outcome, and the fitted regression lines are almost flat (slightly negative), indicating that PM2.5 levels alone do not predict county-level asthma burden in this dataset. This suggests that other factors (healthcare access, socioeconomic status, baseline disease burden, or chronic exposure patterns) likely play a larger role in explaining variation across counties.
 
-Third Plot: 
+
+
+#Asthma ED Visits in High vs. Low PM2.5 Counties
 ```{r}
-interesting <- c("Fresno", "Los Angeles", "Marin", "Butte", "Kern", "San Francisco")
+density_data <- asthma_2020 |>
+  filter(!is.na(pm25_days), !is.na(ed_visit_rate)) |>
+  mutate(
+    pollution_group = ifelse(pm25_days > median(pm25_days, na.rm = TRUE),
+                             "High PM2.5",
+                             "Low PM2.5")
+  )
 
-prev_focus <- prev_clean |>
-  dplyr::filter(county %in% interesting)
-
-ggplot(prev_focus, aes(x = years_period, y = prevalence, color = county, group = county)) +
-  geom_line(size = 1.2) +
-  geom_point(size = 2) +
+ggplot(density_data, aes(x = ed_visit_rate, fill = pollution_group)) +
+  geom_density(alpha = 0.35) +
+  scale_fill_manual(values = c("#ef8a62", "#67a9cf")) +
   labs(
-    title = "Asthma Prevalence for Selected Counties (2015–2022)",
-    x = "Two-Year Period",
-    y = "Prevalence (%)",
-    color = "County"
+    title = "Distribution of Asthma ED Visit Rates in High vs Low PM2.5 Counties (2020)",
+    x = "ED Visit Rate (per 10,000)",
+    fill = "PM2.5 Group"
   ) +
-  theme_minimal(base_size = 14) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-```
+  theme_minimal(base_size = 13)
 
-Fourth Plot: 
+```
+The distribution of ED visit rates does not significantly differ in mean between high- and low-PM2.5 counties, which aligns with the weak correlation observed earlier. However, high-PM2.5 counties show a wider spread of ED visit rates, suggesting that pollution alone does not explain county-level asthma burden. Other structural factors—such as rural healthcare access, socioeconomic conditions, or baseline prevalence—likely contribute to the variability.
+
+# PCP Plot of Asthma and Pollution Metrics
 ```{r}
-ggplot(prev_counties, aes(x = years_period, y = county, fill = prevalence)) +
-  geom_tile() +
-  scale_fill_viridis_c(option = "C") +
+wildfire_major5 <- tolower(c(
+  "mendocino","trinity","tehama","glenn","lake",
+  "santa clara","alameda","stanislaus","san joaquin","contra costa",
+  "napa","sonoma","solano","yolo","lake",
+  "fresno","madera",
+  "butte","plumas"
+))
+
+pm_2020 <- aqi_ca |>
+  mutate(county = tolower(county)) |>
+  filter(year == 2020) |>
+  select(county, pm25_days = days_pm2_5)
+
+# Clean for merging ----
+pm25_2020 <- pm_2020 |>
+  mutate(county = tolower(county)) |>
+  select(county, pm25_days)
+
+ed_2020_clean <- edvisits_clean |>
+  mutate(county = tolower(county)) |>
+  filter(year == 2020) |>
+  select(county, ed_visit_rate)
+
+hosp_2020_clean <- hosp_clean |>
+  mutate(county = tolower(county)) |>
+  filter(year == 2020) |>
+  select(county, hosp_rate)
+
+asthma_all_2020 <- pm25_2020 |>
+  left_join(ed_2020_clean, by = "county") |>
+  left_join(hosp_2020_clean, by = "county") |>
+  mutate(wildfire = county %in% wildfire_major5)
+
+asthma_scaled <- asthma_all_2020 |>
+  mutate(across(
+    c(pm25_days, ed_visit_rate, hosp_rate),
+    ~ (.-min(., na.rm = TRUE)) / (max(., na.rm = TRUE)-min(., na.rm = TRUE)),
+    .names = "scaled_{.col}"
+  ))
+
+# Convert to long format
+asthma_long <- asthma_scaled |>
+  select(county, wildfire,
+         scaled_pm25_days,
+         scaled_ed_visit_rate,
+         scaled_hosp_rate) |>
+  pivot_longer(
+    cols = starts_with("scaled_"),
+    names_to = "metric",
+    values_to = "value"
+  ) |>
+  mutate(metric = factor(
+    metric,
+    levels = c("scaled_pm25_days", "scaled_ed_visit_rate", "scaled_hosp_rate"),
+    labels = c("PM2.5 Days", "ED Visit Rate", "Hospitalization Rate")
+  ))
+
+ggplot(asthma_long, aes(x = metric, y = value, group = county, color = wildfire)) +
+  geom_line(alpha = 0.6, linewidth = 0.8) +
+  scale_color_manual(values = c("FALSE" = "gray60", "TRUE" = "firebrick")) +
   labs(
-    title = "Heatmap of Asthma Prevalence by County (2015–2022)",
-    x = "Two-Year Period",
-    y = "County",
-    fill = "Prevalence (%)"
+    title = "Parallel Coordinate Plot of Asthma & Pollution Metrics (2020)",
+    subtitle = "Red = counties impacted by major 2020 wildfires",
+    x = "Metric",
+    y = "Scaled Value",
+    color = "Wildfire County"
   ) +
-  theme_minimal(base_size = 14) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme_minimal(base_size = 14)
+
 ```
-
-
-## Asthma Emergency Department Visit 
-
+The parallel coordinate plot compares PM2.5 exposure, asthma ED visits, and hospitalization rates across California counties in 2020, highlighting wildfire-affected counties. Although wildfire counties show higher scaled PM2.5 levels, this does not translate into higher asthma outcomes: wildfire and non-wildfire counties overlap heavily on the ED and hospitalization axes. This aligns with earlier analyses showing weak or non-significant pollution–asthma associations. Overall, despite major smoke events, county-level asthma outcomes did not systematically increase, possibly reflecting pandemic-era behavior changes or the limitations of aggregated county data.

@@ -2,15 +2,22 @@
 
 ## Description
 
-This analysis draws from multiple publicly available datasets related to asthma prevalence and environmental conditions in California. Each source was cleaned, standardized, and prepared for visual exploration and comparison across counties and years.
+This project combines multiple publicly available datasets to examine relationships between air quality and asthma outcomes in California. The analysis uses:
+
+- **Asthma emergency department visits, hospitalizations, and mortality** from California Breathing  
+- **PM2.5 pollution data** from the U.S. EPA Air Quality System (AQS)  
+- **County boundary shapefiles** from the U.S. Census Bureau 
+
+All datasets were cleaned, standardized (e.g., county names, year formats), and merged into a unified county-year dataset to help with mapping and correlation analysis.
 
 ## Asthma Prevalence (CHIS)
 ### Source
 Asthma Prevalence Source: https://data.chhs.ca.gov/dataset/asthma-prevalence
 
-To prepare the CHIS Current Asthma Prevalence by County dataset for analysis, I first standardized and simplified the structure so that each row represented a single county–period prevalence estimate. The raw dataset includes multiple stratified estimates for each county (by age group, population subgroup, and special groupings). For this project, I focused on the broadest and most interpretable measure, filtering the dataset to retain only rows corresponding to the Total population and All ages categories. This ensures comparability across counties and avoids fragmented or duplicated prevalence estimates. I then standardized column names for consistency and ease of use in subsequent analysis.
+To prepare the CHIS Current Asthma Prevalence dataset, I restructured it so each row represented a single county–period estimate. Because the raw data contain many stratified subgroup estimates, I filtered to the most interpretable values—**Total population** and **All ages**—to ensure comparability across counties. Column names were standardized for consistency.
 
-A key cleaning step involved fixing an encoding issue in the years column: the two-year period labels (e.g., “2015–2016”) contained non-ASCII dash characters rendered as replacement symbols (“�”), which would interfere with plotting, grouping, and joining. I replaced all non-ASCII characters with a standard hyphen, producing clean period labels such as “2015-2016”, “2017-2018”, and so on. From the cleaned dataset, I retained only the variables relevant to this analysis—county name, two-year period, and current asthma prevalence—and separated the statewide row (“California”) from the county-level rows. Isolating the statewide estimate allows for clear visualization of overall trends, while the county-level dataset supports exploration of geographic variation. These steps produced a tidy, analysis-ready panel dataset suitable for multi-year visualizations and for contextualizing asthma burden across California.
+The *years* field contained non-ASCII dash characters (e.g., “2015�2016”), so I replaced them with standard hyphens (e.g., “2015-2016”) to allow for proper grouping and plotting. After that I kept only the variables needed for analysis: county name, two-year period, and prevalence. The statewide (“California”) row was separated to allow for clear comparison between overall trends and county-level variation.
+
 
 ### Raw Data Overview
 
@@ -35,15 +42,9 @@ Stratification: By age group, population subgroup, and county groups
 Original variables:county, years, strata, age_group, current_prevalence, etc.
 
 ### Missing Values 
-The original dataset contains several NA values in grouping columns (e.g., counties_grouped) and confidence intervals. These were not used in our final analysis, so missingness in these columns was not imputed. All rows with missing current_prevalence were dropped.
+The original dataset includes several NA values in optional grouping fields (e.g., `counties_grouped`) and in confidence‐interval columns. These variables were not used in the final analysis, so no imputation was applied. Only rows with missing `current_prevalence` were removed, making sure that all kept observations contained valid prevalence estimates.
 
 ### Cleaning and Processing : 
-Steps Taken:
-Filtered to Total population and All ages
-Fixed encoding issue in years (non-ASCII dashes → -)
-Selected relevant columns: county, years_period, prevalence
-Separated California statewide estimates from county-level estimates
-
 ```{r prev-clean}
 prev_clean <- prev |>
   filter(
@@ -67,7 +68,6 @@ prev_clean <- prev |>
 slice_head(prev_clean, n = 10)
 ```
 
-Califronia Statewide Stuff: 
 ```{r}
 prev_statewide <- prev_clean |>
   filter(county == "California")
@@ -79,9 +79,9 @@ saveRDS(prev_clean, "prev_clean.rds")
 ```
 
 ## Asthma Emergency Department Visits (CHIS)
-The Asthma Emergency Department (ED) Visit Rates by County dataset provides annual counts and age‑adjusted rates of asthma‑related emergency department visits for every California county from 2015 to 2023. Each observation represents a specific county–year combination and includes demographic stratifications by age group and race/ethnicity. The key variables of interest are the number of ED visits and the age‑adjusted ED visit rate per 10,000 residents. The data originate from the Department of Health Care Access and Information’s hospital ED records and include all licensed hospitals in the state. One important note from the documentation is that diagnostic coding transitioned from ICD‑9 to ICD‑10 in late 2015, so the dataset recommends avoiding comparisons between 2015 and 2016 for long‑term trend analysis.
+The Asthma Emergency Department (ED) Visit Rates dataset reports annual counts and age-adjusted asthma-related ED visit rates for every California county from 2015–2023. Each row represents a county–year, with key variables including the number of ED visits and the age-adjusted rate per 10,000 residents.
 
-To prepare this dataset for analysis, we focused on creating a consistent, county‑level panel that aligns with our asthma prevalence dataset. First, we filtered the data to retain only observations categorized under “Total population” and “All ages”, ensuring comparability across counties and years without demographic stratification. We removed the statewide aggregate row (“California”), since our analysis centers on geographic variation at the county level. We then selected and renamed the most relevant variables: the raw number of asthma ED visits and the age‑adjusted visit rate. This resulted in a tidy dataset with four columns—county, year, ED visits, and ED visit rate—covering 406 county‑year observations
+For this analysis, the dataset was simplified to create a consistent county-level panel. I filtered to the “Total population” and “All ages” categories, removed the statewide aggregate, and kept only the core variables (county, year, ED visits, and ED visit rate). 
 
 ### Source
 Source : https://data.chhs.ca.gov/dataset/asthma-emergency-department-visit-rates/resource/94d84508-8046-40a7-b8d9-0ed73b13b697
@@ -97,7 +97,9 @@ glimpse(edvisits)
 ```
 
 ### Missing Value Analysis 
-We did not conduct formal missing value analysis, as our filtering steps implicitly removed rows with stratified or incomplete data. The resulting dataset contains complete county-level data from 2015 to 2023 with no missing values in the key outcome variables.
+I did not conduct a separate missing-value analysis because our filtering steps (restricting to “Total population” and “All ages,” and removing non-county rows) implicitly removed most rows with incomplete or stratified data. After cleaning, the remaining county-level dataset contains complete values for the key outcome variables—ED visit counts and age-adjusted ED visit rates—for all counties in all available years (2015–2023).
+
+
 ### Cleaning Steps
 ```{r}
 # Filter to county-level, all ages, total population
@@ -126,14 +128,12 @@ glimpse(edvisits_clean)
 saveRDS(edvisits_clean, "edvisits_clean.rds")
 ```
 
-
-
 ## Pollution 
+The air quality data used in this project comes from the U.S. Environmental Protection Agency’s Air Quality Statistics by County tool. Because the EPA provides one CSV per year, I manually downloaded the individual PM2.5 summary files for 2015–2023 and combined them into a single dataset. Each file reports the number of days in which daily PM2.5 levels exceeded the federal standard for every monitored county. After importing the files, I standardized county names, filtered to California, and summarized values for counties with multiple monitors. This produced a clean county–year panel of annual PM2.5 exceedance days that aligns with the asthma datasets for visualization and comparison.
+
 ### Source
 https://aqs.epa.gov/aqsweb/airdata/download_files.html#Raw
-### Raw Overview
-Downloaded each years csv and created a massiv edata frame w ciltered CA values
-### Missing Value Analysis 
+
 ### Cleaning Steps
 ```{r}
 
@@ -176,9 +176,9 @@ aqi_ca <- map_df(files, function(f) {
 ```{r}
 glimpse(aqi_ca)
 saveRDS(aqi_ca, "aqi_ca.rds")
-
 ```
 ```{r}
+# Sanity check
 aqi_ca |> count(year)
 aqi_ca |> count(county)
 aqi_ca |> summarise(across(everything(), ~sum(is.na(.))))
@@ -190,6 +190,7 @@ This dataset provides the number and rate (per 10,000 residents) of asthma-relat
 
 ### Source
 https://data.chhs.ca.gov/dataset/asthma-hospitalization-rates-by-county
+
 ### Raw Overview
 ```{r}
 
@@ -198,10 +199,10 @@ hospital <- read_csv("asthma-hospitalization-rates-by-county-2015_2023.csv") |>
 
 # inspect
 glimpse(hospital)
-
 ```
 
 ### Missing Value Analysis 
+Similar to the previous datasets, the original dataset includes several NA values which were not used in the final analysis, so no imputation was applied. 
 
 ### Cleaning Steps
 ```{r}
@@ -230,25 +231,67 @@ glimpse(hosp_clean)
 saveRDS(hosp_clean, "hosp_clean.rds")
 ```
 
-
 ## Asthma Deaths By County
+This dataset provides the number of asthma-related deaths and the corresponding age-adjusted mortality rate (per 1,000,000 residents) for California and each county. Mortality counts are reported in three-year periods (e.g., 2014–2016, 2017–2019) and are stratified by age group and race/ethnicity. The data come from the California Department of Public Health’s Vital Records, which include all certified deaths in the state. Only cases where asthma was listed as the underlying cause of death are included.
 
 ### Source
 ### Raw Overview
-### Missing Value Analysis 
-### Cleaning Steps
-### Preview of Final DataFrame
+```{r}
+deaths <- read_csv("asthma-deaths-by-county-2014_2022.csv") |>
+  clean_names()
 
-## Dataset 6 
-### Source
-### Raw Overview
+# inspect
+glimpse(deaths)
+```
 ### Missing Value Analysis 
-### Cleaning Steps
-### Preview of Final DataFrame
+Similar to the previous datasets, the original dataset includes several NA values which were not used in the final analysis, so no imputation was applied. 
 
-## Dataset 7 
-### Source
-### Raw Overview
-### Missing Value Analysis 
 ### Cleaning Steps
+To prepare the asthma mortality dataset for analysis, I filtered the data to include only county-level estimates for the total population and all ages, removing statewide aggregates and demographic stratifications. Because the raw data report deaths in 3-year periods (e.g., 2020–2022), I standardized each record to the midpoint year (2021) and retained the corresponding death counts and age-adjusted mortality rates.
+```{r}
+library(dplyr)
+library(tidyr)
+library(stringr)
+
+deaths_clean <- deaths |> 
+  filter(
+    strata == "Total population",
+    age_group == "All ages",
+    county != "California"
+  ) |>
+  mutate(county = tolower(county))
+
+# Fix encoding
+deaths_fixed <- deaths_clean |>
+  mutate(
+    years = iconv(years, from = "", to = "UTF-8"),
+    years = gsub("[^0-9-]", "-", years),
+    years = gsub("-+", "-", years),
+    years = str_trim(years)
+  )
+
+# Split start/end + compute midpoint
+deaths_expanded <- deaths_fixed |>
+  separate(years, into = c("start", "end"), sep = "-", convert = TRUE) |>
+  filter(!is.na(start) & !is.na(end)) |>
+  mutate(
+    year = floor((start + end) / 2),
+    asthma_deaths = replace_na(number_of_deaths, 0),
+    asthma_mortality_rate = replace_na(age_adjusted_mortality_rate, 0)
+  ) |>
+  select(
+    county,
+    year,
+    asthma_deaths,
+    asthma_mortality_rate
+  )
+
+```
+
 ### Preview of Final DataFrame
+```{r}
+glimpse(deaths_expanded)
+saveRDS(deaths_expanded, "deaths_expanded.rds")
+```
+
+

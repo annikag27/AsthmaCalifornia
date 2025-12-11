@@ -27,6 +27,8 @@ edvisits_clean |>
   theme_minimal()
 
 ```
+The median asthma ED visit rate was fairly stable from 2015 to 2019, fluctuating between the mid-40s and 50 visits per 10,000 residents. In 2020, however, there was a dramatic drop to nearly half the previous year's rate, likely reflecting reduced healthcare during the pandemic rather than a true decline in asthma severity. Rates slightly rebounded in 2021 but remained well below pre-pandemic levels which is also expected.
+
 ## Plot 2 (Top 10 Counties by Average ED Visit Rate (2015 - 2023))
 ```{r}
 edvisits_clean |>
@@ -44,24 +46,12 @@ edvisits_clean |>
   theme_minimal()
 
 ```
-## Heatmap of ED Visit Rate by County and Year
-```{r}
-edvisits_clean |>
-  ggplot(aes(x = factor(year), y = fct_reorder(county, ed_visit_rate), fill = ed_visit_rate)) +
-  geom_tile(color = "white") +
-  scale_fill_viridis_c(option = "magma") +
-  labs(
-    title = "Asthma ED Visit Rate by County and Year",
-    x = "Year",
-    y = "County",
-    fill = "Visit Rate"
-  ) +
-  theme_minimal()
+This ranking shows that several rural and agriculturally intensive counties—such as Modoc, Lake, Solano, and Merced—experience the highest average asthma ED visit rates in California. Many of these counties face environmental and structural risk factors, including poorer air quality, higher smoke exposure, and limited healthcare access. The pattern suggests that asthma burden is not evenly distributed across the state, with certain Northern and Central Valley counties experiencing disproportionately high rates of emergency care needs.
 
-```
+
 ## Distribution of ED Visit Rates
 ```{r}
-edvisits_clean %>%
+edvisits_clean |>
   ggplot(aes(x = ed_visit_rate)) +
   geom_histogram(fill = "tomato", bins = 30, color = "white") +
   labs(
@@ -72,10 +62,13 @@ edvisits_clean %>%
   theme_minimal()
 
 ```
+This distribution shows that most counties and years have asthma ED visit rates clustered between roughly 25 and 50 visits per 10,000 residents, indicating a fairly common baseline burden across the state. However, the long right tail reveals several counties with substantially higher rates, reaching 70–100 visits per 10,000—suggesting that a small number of counties experience disproportionately severe asthma-related emergency care needs. This right-skewed pattern highlights important inequities, with a few counties repeatedly facing much higher asthma burden than the statewide norm which is consistent with the previous histogram. 
+
+
 ## County Level Trends
 ```{r}
 edvisits_clean |>
-  filter(county %in% c("Alameda", "Los Angeles", "San Francisco", "Fresno")) |>
+  filter(county %in% c("Alameda", "Los Angeles", "San Francisco", "Solano", "Modoc", "Lake")) |>
   ggplot(aes(x = year, y = ed_visit_rate)) +
   geom_line(color = "purple") +
   geom_point() +
@@ -88,24 +81,71 @@ edvisits_clean |>
   theme_minimal()
 
 ```
+These county-level trends show that asthma ED visit rates generally declined over time, with a sharp drop in 2020 that mirrors the statewide pandemic related pattern. However, the trajectories differ by county: places like Modoc and Lake had persistently high rates before 2020, while San Francisco and Los Angeles maintained comparatively low and stable rates throughout—highlighting substantial geographic disparities in asthma burden.
+
 ## Chloropleth 
 ```{r}
+# Wildfire county list (same as your prevalence map)
+wildfire_major5 <- c(
+  # August Complex
+  "mendocino", "trinity", "tehama", "glenn", "lake",
+  
+  # SCU Lightning Complex
+  "santa clara", "alameda", "stanislaus", "san joaquin", "contra costa",
+  
+  # LNU Lightning Complex
+  "napa", "sonoma", "solano", "yolo", "lake",
+  
+  # Creek Fire
+  "fresno", "madera",
+  
+  # North Complex
+  "butte", "plumas"
+)
 
-# Get California county boundaries
-ca_counties <- counties(state = "CA", cb = TRUE, class = "sf")
+# load county
+ca_geom <- counties(state = "CA", cb = TRUE, year = 2023) |>
+  st_as_sf() |>
+  mutate(county = tolower(NAME)) |>
+  select(county, geometry)
 
-# Join directly using the existing columns
-ca_counties_merged <- dplyr::left_join(ca_counties, edvisits_clean, by = c("NAME" = "county"))
+# filter for year 2020 
+ed_2020 <- edvisits_clean |>
+  filter(year == 2020) |>
+  mutate(county = tolower(county)) |>
+  select(county, ed_visit_rate)
 
+map_ed <- ca_geom |>
+  left_join(ed_2020, by = "county") |>
+  mutate(wildfire_major = county %in% wildfire_major5)
 
-ggplot(ca_counties_merged) +
+ggplot(map_ed) +
   geom_sf(aes(fill = ed_visit_rate), color = "white", size = 0.2) +
-  scale_fill_viridis_c(option = "plasma", na.value = "gray90") +
-  labs(
-    title = "Asthma ED Visit Rates by California County (2020)",
-    subtitle = "Rates per 10,000 residents",
-    fill = "ED Visit Rate"
+  geom_sf(
+    data = subset(map_ed, wildfire_major == TRUE),
+    fill = NA,
+    color = "red",
+    size = 0.5
   ) +
-  theme_minimal()
+  scale_fill_viridis_c(
+    name = "ED Visit Rate\n(per 10,000)",
+    option = "magma",
+    direction = -1,
+    na.value = "grey90"
+  ) +
+  labs(
+    title = "Asthma ED Visit Rate by County in California (2020)",
+    subtitle = "Outlines show counties impacted by the 5 largest wildfires of 2020",
+    caption = "Source: CHIS"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    axis.text = element_blank(),
+    axis.title = element_blank(),
+    panel.grid = element_blank(),
+    plot.title = element_text(face = "bold")
+  )
+
 ```
+The 2020 asthma ED visit choropleth shows clear geographic variation across California, with the highest emergency visit rates clustered in the northern rural counties and parts of the Central Valley. Counties in Southern California and the Bay Area generally show lower ED visit rates, consistent with broader access to care and fewer extreme asthma burdens. The counties outlined in red represent the areas heavily affected by the largest 2020 wildfires and also show elevated ED visit rates, even though the relationship is not uniform across all fire-affected regions. A few lightly populated rural counties appear blank on the map because the state did not report asthma ED visit data for those counties in 2020, resulting in NA values. 
 

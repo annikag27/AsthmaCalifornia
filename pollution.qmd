@@ -19,54 +19,10 @@ aqi_ca <- readRDS("aqi_ca.rds")
 ```
 
 ## PM2.5 trend over time for California (2000–2023)
-```{r}
-aqi_ca |>
-  group_by(year) |>
-  summarise(mean_pm25_days = mean(days_pm2_5, na.rm = TRUE)) |>
-  ggplot(aes(year, mean_pm25_days)) +
-  geom_line() +
-  geom_point() +
-  labs(
-    title = "Average PM2.5 Days per County in California (2000–2023)",
-    y = "Days with Elevated PM2.5",
-    x = "Year"
-  )
-
-```
-## Ozone Trend Over Time
-```{r}
-aqi_ca |>
-  group_by(year) |>
-  summarise(mean_ozone = mean(days_ozone, na.rm = TRUE)) |>
-  ggplot(aes(year, mean_ozone)) +
-  geom_line(color = "steelblue") +
-  labs(
-    title = "Ozone Days Over Time",
-    y = "Days with Elevated Ozone"
-  )
-
-```
-
-## County-level variations
-```{r}
-aqi_ca |>
-  ggplot(aes(x = factor(year), y = days_pm2_5, group = factor(year))) +
-  geom_boxplot() +
-  labs(title = "Distribution of PM2.5 Days Across Counties")
-
-aqi_ca |>
-  ggplot(aes(year, county, fill = days_pm2_5)) +
-  geom_tile() +
-  scale_fill_viridis_c() +
-  labs(title = "PM2.5 Days by County and Year")
-
-```
-
-## Wildfire Spikes
 
 ```{r}
 
-# 1. Summarise PM2.5 across counties by year
+# summarize PM2.5 across counties by year
 pm25_by_year <- aqi_ca |>
   group_by(year) |>
   summarise(
@@ -74,14 +30,14 @@ pm25_by_year <- aqi_ca |>
     .groups = "drop"
   )
 
-# 2. Choose wildfire-heavy years you want to highlight
+# wildfire-heavy years 
 fire_years <- c(2011, 2013, 2015, 2017, 2018, 2020, 2021)
 
 fire_labels <- pm25_by_year |>
   filter(year %in% fire_years) |>
   mutate(label = as.character(year))
 
-# 3. Plot with wildfire annotations
+# plot w wild fire years 
 ggplot(pm25_by_year, aes(x = year, y = median_pm25)) +
   geom_line(linewidth = 1, color = "firebrick") +
   geom_point(size = 2, color = "firebrick") +
@@ -111,45 +67,95 @@ ggplot(pm25_by_year, aes(x = year, y = median_pm25)) +
   theme_minimal(base_size = 13)
 
 ```
+The plot shows a clear long-term rise in the number of days exceeding PM2.5 thresholds across California counties from 2000–2023. After 2005, elevated PM2.5 days become substantially more common, and by the late 2010s many counties experience more than 150 polluted days per year. Several pronounced spikes, including 2011–2013, 2018, 2020, and 2021, all correspond closely to major wildfire seasons (highlighted by dashed lines), indicating that wildfire activity has become a dominant contributor to particulate pollution in recent years.
+
+## County-level variations
+```{r fig.height=14}
+
+
+ggplot(aqi_ca, aes(x = days_pm2_5, y = county, fill = ..x..)) +
+  ggridges::geom_density_ridges_gradient() +
+  scale_fill_viridis_c() +
+  labs(
+    title = "Distribution of PM2.5 Days by County (2000–2023)",
+    x = "Days ≥ PM2.5 Threshold",
+    y = "County"
+  )
+
+
+```
+This ridgeline visualization shows how the distribution of PM2.5-elevated days varies widely across California counties from 2000–2023. Counties in the Central Valley and Rural North exhibit much broader, right-skewed distributions, indicating many years with extremely high pollution days. In contrast, coastal counties—such as those in the Bay Area and Southern California—generally show much narrower distributions with lower overall PM2.5 days, reflecting more stable and cleaner air quality over time.
+
+Overall, the plot highlights a clear geographic divide, with inland and northern counties experiencing consistently heavier pollution burdens compared to coastal regions.
+
 ## Chloropleth
 ```{r}
-ca_counties <- counties(state = "CA", cb = TRUE, class = "sf") |>
-  select(NAME, geometry) |>
-  rename(county = NAME) |>
-  mutate(county = as.character(county))
+# Wildfire county list 
+wildfire_major5 <- c(
+  # August Complex
+  "mendocino", "trinity", "tehama", "glenn", "lake",
+  
+  # SCU Lightning Complex
+  "santa clara", "alameda", "stanislaus", "san joaquin", "contra costa",
+  
+  # LNU Lightning Complex
+  "napa", "sonoma", "solano", "yolo", "lake",
+  
+  # Creek Fire
+  "fresno", "madera",
+  
+  # North Complex
+  "butte", "plumas"
+)
 
-aqi_year <- aqi_ca |>
-  filter(year == 2020) |>   
+ca_geom <- counties(state = "CA", cb = TRUE, year = 2023) |>
+  st_as_sf() |>
+  mutate(county = tolower(NAME)) |>
+  select(county, geometry)
+
+# filter PM2.5 pollution data for 2020
+pm_2020 <- aqi_ca |>
+  filter(year == 2020) |>
+  mutate(county = tolower(county)) |>
   select(county, days_pm2_5)
 
-aqi_year <- aqi_year |>
-  mutate(county = stringr::str_to_title(county))
+map_pm <- ca_geom |>
+  left_join(pm_2020, by = "county") |>
+  mutate(wildfire_major = county %in% wildfire_major5)
 
-aqi_map <- ca_counties |>
-  left_join(aqi_year, by = "county")
-
-ggplot(aqi_map) +
-  geom_sf(aes(fill = days_pm2_5), color = "white", linewidth = 0.2) +
-  scale_fill_viridis_c(
+ggplot(map_pm) +
+  geom_sf(aes(fill = days_pm2_5), color = "white", size = 0.2) +
+  geom_sf(
+    data = subset(map_pm, wildfire_major == TRUE),
+    fill = NA,
+    color = "red",
+    size = 0.6
+  ) +
+  scale_fill_viridis(
+    name = "PM2.5 Days\n(2020)",
     option = "magma",
-    name = "Days PM2.5\n(primary pollutant)"
+    direction = 1,
+    na.value = "grey90"
   ) +
   labs(
-    title = "PM2.5 Pollution Across California Counties",
-    subtitle = "Number of days where PM2.5 was the primary pollutant (2020)",
-    caption = "Data source: EPA Air Quality System (AQI by County)"
+    title = "PM2.5 Air Pollution Levels by County in California (2020)",
+    subtitle = "Red outlines highlight counties impacted by major 2020 wildfires",
+    caption = "Source: EPA Air Quality System"
   ) +
-  theme_minimal(base_size = 13) +
+  theme_minimal(base_size = 14) +
   theme(
-    legend.position = "right",
-    panel.grid = element_blank()
+    axis.text = element_blank(),
+    axis.title = element_blank(),
+    panel.grid = element_blank(),
+    plot.title = element_text(face = "bold")
   )
 
 ```
+The map shows substantial geographic variation in PM2.5 pollution across California in 2020, with the highest pollution levels concentrated in Central and Northern inland counties which are areas that experienced the most extreme fire activity that year. Coastal and Southern California counties generally show lower PM2.5 days, reflecting cleaner air and fewer major smoke events. The highlighted wildfire-affected counties overlap strongly with the highest-pollution counties, showing the role of wildfire smoke in driving PM2.5 exposure.
+
 # Animated Chloropleth
 ```{r eval=FALSE}
 
-# 1. Clean AQI data ---------------------------------------
 aqi_ca <- aqi_ca |>
   mutate(
     county = tolower(county),
@@ -158,13 +164,11 @@ aqi_ca <- aqi_ca |>
 
 years <- sort(unique(aqi_ca$year))
 
-# 2. Static California geometry (same for every frame) ----
 ca_geom <- counties(state = "CA", cb = TRUE, year = 2023, class = "sf") |>
   st_make_valid() |>
   mutate(county = tolower(NAME)) |>
   select(county, geometry)
 
-# 3. Complete county × year grid, then join data + geometry
 grid <- expand_grid(
   county = ca_geom$county,
   year   = years
@@ -175,20 +179,19 @@ aqi_map <- grid |>
   left_join(ca_geom, by = "county") |>
   st_as_sf()
 
-# Wildfire years flag
+
 wildfire_years <- c(2008, 2017, 2018, 2020, 2021)
 
 aqi_map <- aqi_map |>
   mutate(is_fire_year = year %in% wildfire_years)
 
-# For a fixed panel extent so counties never "jump"
 bbox_ca <- st_bbox(ca_geom)
 
-# 4. Animated map -----------------------------------------
+
 p <- ggplot(aqi_map) +
   geom_sf(aes(fill = days_pm2_5), color = "white", size = 0.15) +
 
-  # Static outer CA border
+  # outer CA border
   geom_sf(
     data = st_union(ca_geom),
     fill = NA,
@@ -197,7 +200,7 @@ p <- ggplot(aqi_map) +
     inherit.aes = FALSE
   ) +
 
-  # Red border in wildfire years
+  # red border for wildfire years
   geom_sf(
     data = aqi_map |> filter(is_fire_year),
     color = "red",
@@ -215,7 +218,7 @@ p <- ggplot(aqi_map) +
   labs(
     title = "PM2.5 Pollution Across California Counties ({closest_state})",
     subtitle = "{ifelse(closest_state %in% wildfire_years,
-                        '🔥 Wildfire Year — Severe Smoke Season',
+                        'Wildfire Year — Severe Smoke Season',
                         'Non-Wildfire Year')}",
     caption = "Source: EPA AQI Data 2000–2023"
   ) +
@@ -226,7 +229,7 @@ p <- ggplot(aqi_map) +
     legend.position = "right"
   ) +
 
-  # LOCK the spatial extent so frames are identical
+  # lock spatial extent so frames are identical
   coord_sf(
     xlim = c(bbox_ca["xmin"], bbox_ca["xmax"]),
     ylim = c(bbox_ca["ymin"], bbox_ca["ymax"]),
@@ -240,7 +243,7 @@ p <- ggplot(aqi_map) +
   ) +
   ease_aes("linear")
 
-# 5. Render animation (GIF) -------------------------------
+# animate gif
 anim <- animate(
   p,
   nframes = 150,
