@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>2&nbsp; Data – Asthma Related Mortality in California</title>
+<title>2&nbsp; Data – Asthma and Pollution Outcomes in California</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -135,7 +135,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <a href="./index.html" class="sidebar-logo-link">
       </a>
     <div class="sidebar-title mb-0 py-0">
-      <a href="./">Asthma Related Mortality in California</a> 
+      <a href="./">Asthma and Pollution Outcomes in California</a> 
         <div class="sidebar-tools-main">
     <a href="https://github.com/annikag27/AsthmaCalifornia" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
 </div>
@@ -508,7 +508,7 @@ $ ed_visit_rate &lt;dbl&gt; 64.3, 0.0, 58.4, 50.2, 48.0, 41.4, 65.2, 53.0, 36.4,
 </section>
 <section id="pollution" class="level2" data-number="2.4">
 <h2 data-number="2.4" class="anchored" data-anchor-id="pollution"><span class="header-section-number">2.4</span> Pollution</h2>
-<p>The air quality data used in this project comes from the U.S. Environmental Protection Agency’s Air Quality Statistics by County tool. Because the EPA provides one CSV per year, I manually downloaded the individual PM2.5 summary files for 2015–2023 and combined them into a single dataset. Each file reports the number of days in which daily PM2.5 levels exceeded the federal standard for every monitored county. After importing the files, I standardized county names, filtered to California, and summarized values for counties with multiple monitors. This produced a clean county–year panel of annual PM2.5 exceedance days that aligns with the asthma datasets for visualization and comparison.</p>
+<p>The air quality data used in this project comes from the U.S. Environmental Protection Agency’s Air Quality Statistics by County tool. Because the EPA provides one CSV per year, I manually downloaded the individual PM2.5 summary files for 2000–2023 and combined them into a single dataset. Each file reports the number of days in which daily PM2.5 levels exceeded the federal standard for every monitored county. After importing the files, I standardized county names, filtered to California, and summarized values for counties with multiple monitors. This produced a clean county–year panel of annual PM2.5 exceedance days that aligns with the asthma datasets for visualization and comparison.</p>
 <section id="source-2" class="level3" data-number="2.4.1">
 <h3 data-number="2.4.1" class="anchored" data-anchor-id="source-2"><span class="header-section-number">2.4.1</span> Source</h3>
 <p>https://aqs.epa.gov/aqsweb/airdata/download_files.html#Raw</p>
